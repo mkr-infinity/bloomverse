@@ -1,0 +1,243 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isString(value) {
+      return value is string;
+    }
+
+    function isOptionalString(value, maxLength) {
+      return value == null || (value is string && value.size() <= maxLength);
+    }
+
+    function isRequiredString(value, maxLength) {
+      return value is string && value.size() > 0 && value.size() <= maxLength;
+    }
+
+    function isUrlLike(value) {
+      return value == null || (value is string && value.size() <= 240 && value.matches('https://.*'));
+    }
+
+    function hasOnlyKeys(keys) {
+      return request.resource.data.keys().hasOnly(keys);
+    }
+
+    function isDistrict(value) {
+      return value in [
+        'nature',
+        'creator',
+        'startup',
+        'gaming',
+        'dream',
+        'legacy',
+        'mystery',
+        'future'
+      ];
+    }
+
+    function isTimelineType(value) {
+      return value in [
+        'citizenJoined',
+        'landmarkCreated',
+        'discoveryFound',
+        'eventWon',
+        'dreamAdded'
+      ];
+    }
+
+    function isFavoriteType(value) {
+      return value in ['dream', 'landmark', 'profile', 'creation'];
+    }
+
+    function isValidSocials(socials) {
+      return socials is map
+        && socials.keys().hasOnly(['github', 'linkedin', 'instagram', 'twitterX', 'website'])
+        && isUrlLike(socials.github)
+        && isUrlLike(socials.linkedin)
+        && isUrlLike(socials.instagram)
+        && isUrlLike(socials.twitterX)
+        && isUrlLike(socials.website);
+    }
+
+    function isValidWorldPosition(position) {
+      return position is map
+        && position.keys().hasOnly(['x', 'y', 'z'])
+        && position.x is number
+        && position.y is number
+        && position.z is number;
+    }
+
+    match /worldStats/{statsId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /districts/{districtId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /hallOfLegends/{legendId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /citizens/{citizenId} {
+      allow read: if true;
+      allow create: if hasOnlyKeys([
+          'citizenId',
+          'deviceId',
+          'name',
+          'avatar',
+          'about',
+          'dream',
+          'quote',
+          'socials',
+          'joinDate',
+          'reputation',
+          'achievements',
+          'discoveries',
+          'creations'
+        ])
+        && request.resource.data.citizenId == citizenId
+        && isRequiredString(request.resource.data.deviceId, 96)
+        && isRequiredString(request.resource.data.name, 48)
+        && isRequiredString(request.resource.data.avatar, 80)
+        && isRequiredString(request.resource.data.about, 600)
+        && isRequiredString(request.resource.data.dream, 240)
+        && isRequiredString(request.resource.data.quote, 160)
+        && isValidSocials(request.resource.data.socials)
+        && request.resource.data.joinDate == request.time
+        && request.resource.data.reputation == 0
+        && request.resource.data.achievements is list
+        && request.resource.data.discoveries is list
+        && request.resource.data.creations is list;
+      allow update, delete: if false;
+    }
+
+    match /legacyBooks/{legacyBookId} {
+      allow read: if true;
+      allow create: if hasOnlyKeys(['citizenId', 'deviceId', 'entries', 'createdAt'])
+        && isRequiredString(request.resource.data.citizenId, 96)
+        && isRequiredString(request.resource.data.deviceId, 96)
+        && request.resource.data.entries is list
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /homes/{homeId} {
+      allow read: if true;
+      allow create: if hasOnlyKeys(['citizenId', 'deviceId', 'district', 'position', 'style', 'createdAt'])
+        && isRequiredString(request.resource.data.citizenId, 96)
+        && isRequiredString(request.resource.data.deviceId, 96)
+        && isDistrict(request.resource.data.district)
+        && isValidWorldPosition(request.resource.data.position)
+        && isRequiredString(request.resource.data.style, 80)
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /dreams/{dreamId} {
+      allow read: if true;
+      allow create: if hasOnlyKeys(['citizenId', 'deviceId', 'text', 'district', 'position', 'createdAt', 'favoriteCount'])
+        && isRequiredString(request.resource.data.citizenId, 96)
+        && isRequiredString(request.resource.data.deviceId, 96)
+        && isRequiredString(request.resource.data.text, 240)
+        && isDistrict(request.resource.data.district)
+        && isValidWorldPosition(request.resource.data.position)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.favoriteCount == 0;
+      allow update, delete: if false;
+    }
+
+    match /landmarks/{landmarkId} {
+      allow read: if true;
+      allow create: if hasOnlyKeys(['creatorCitizenId', 'deviceId', 'name', 'type', 'district', 'position', 'createdAt', 'favoriteCount', 'isLegendary'])
+        && isRequiredString(request.resource.data.creatorCitizenId, 96)
+        && isRequiredString(request.resource.data.deviceId, 96)
+        && isRequiredString(request.resource.data.name, 80)
+        && request.resource.data.type in ['community', 'legendaryCandidate']
+        && isDistrict(request.resource.data.district)
+        && isValidWorldPosition(request.resource.data.position)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.favoriteCount == 0
+        && request.resource.data.isLegendary == false;
+      allow update, delete: if false;
+    }
+
+    match /favorites/{favoriteId} {
+      allow read: if true;
+      allow create: if hasOnlyKeys(['deviceId', 'targetId', 'targetType', 'createdAt'])
+        && isRequiredString(request.resource.data.deviceId, 96)
+        && isRequiredString(request.resource.data.targetId, 120)
+        && isFavoriteType(request.resource.data.targetType)
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /discoveries/{discoveryId} {
+      allow read: if true;
+      allow create: if hasOnlyKeys(['deviceId', 'citizenId', 'discoveryKey', 'category', 'createdAt'])
+        && isRequiredString(request.resource.data.deviceId, 96)
+        && isOptionalString(request.resource.data.citizenId, 96)
+        && isRequiredString(request.resource.data.discoveryKey, 120)
+        && request.resource.data.category in ['mystery', 'secret', 'landmark', 'event', 'discovery']
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /timeCapsules/{capsuleId} {
+      allow read: if true;
+      allow create: if hasOnlyKeys(['citizenId', 'deviceId', 'message', 'createdAt', 'unlockAt', 'unlockDays'])
+        && isRequiredString(request.resource.data.citizenId, 96)
+        && isRequiredString(request.resource.data.deviceId, 96)
+        && isRequiredString(request.resource.data.message, 1000)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.unlockAt is timestamp
+        && request.resource.data.unlockDays in [30, 90, 180, 365];
+      allow update, delete: if false;
+    }
+
+    match /timeline/{timelineId} {
+      allow read: if true;
+      allow create: if hasOnlyKeys(['type', 'title', 'targetId', 'targetType', 'position', 'createdAt'])
+        && isTimelineType(request.resource.data.type)
+        && isRequiredString(request.resource.data.title, 120)
+        && isRequiredString(request.resource.data.targetId, 120)
+        && isRequiredString(request.resource.data.targetType, 40)
+        && isValidWorldPosition(request.resource.data.position)
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /communityEvents/{eventId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /newspaperIssues/{issueId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /reports/{reportId} {
+      allow read: if false;
+      allow create: if hasOnlyKeys(['deviceId', 'targetId', 'targetType', 'reason', 'createdAt'])
+        && isRequiredString(request.resource.data.deviceId, 96)
+        && isRequiredString(request.resource.data.targetId, 120)
+        && isRequiredString(request.resource.data.targetType, 40)
+        && isRequiredString(request.resource.data.reason, 400)
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /deviceLimits/{deviceId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['deviceId', 'createdAt', 'lastContributionAt'])
+        && request.resource.data.deviceId == deviceId
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.lastContributionAt == request.time;
+      allow update, delete: if false;
+    }
+  }
+}

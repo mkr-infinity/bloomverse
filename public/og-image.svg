@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#2b2944"/>
+      <stop offset="100%" stop-color="#151d2e"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="45%" r="35%">
+      <stop offset="0%" stop-color="#f0c96b" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#f0c96b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="200" cy="500" r="250" fill="#3c5b38" opacity="0.08"/>
+  <circle cx="1000" cy="150" r="300" fill="#8764c8" opacity="0.06"/>
+  <circle cx="600" cy="315" r="400" fill="url(#glow)"/>
+
+  <!-- Grid dots -->
+  <g opacity="0.08" fill="#f0c96b">
+    <circle cx="100" cy="100" r="2"/><circle cx="200" cy="100" r="2"/><circle cx="300" cy="100" r="2"/>
+    <circle cx="400" cy="100" r="2"/><circle cx="500" cy="100" r="2"/><circle cx="600" cy="100" r="2"/>
+    <circle cx="700" cy="100" r="2"/><circle cx="800" cy="100" r="2"/><circle cx="900" cy="100" r="2"/>
+    <circle cx="1000" cy="100" r="2"/><circle cx="1100" cy="100" r="2"/>
+    <circle cx="100" cy="200" r="2"/><circle cx="200" cy="200" r="2"/><circle cx="300" cy="200" r="2"/>
+    <circle cx="400" cy="200" r="2"/><circle cx="500" cy="200" r="2"/><circle cx="600" cy="200" r="2"/>
+    <circle cx="700" cy="200" r="2"/><circle cx="800" cy="200" r="2"/><circle cx="900" cy="200" r="2"/>
+    <circle cx="1000" cy="200" r="2"/><circle cx="1100" cy="200" r="2"/>
+    <circle cx="100" cy="500" r="2"/><circle cx="200" cy="500" r="2"/><circle cx="300" cy="500" r="2"/>
+    <circle cx="400" cy="500" r="2"/><circle cx="500" cy="500" r="2"/><circle cx="600" cy="500" r="2"/>
+    <circle cx="700" cy="500" r="2"/><circle cx="800" cy="500" r="2"/><circle cx="900" cy="500" r="2"/>
+    <circle cx="1000" cy="500" r="2"/><circle cx="1100" cy="500" r="2"/>
+  </g>
+
+  <!-- Logo -->
+  <g transform="translate(520, 120) scale(0.7)">
+    <ellipse cx="100" cy="60" rx="28" ry="52" fill="#f0c96b" opacity="0.8" transform="rotate(0 100 100)"/>
+    <ellipse cx="100" cy="60" rx="28" ry="52" fill="#75b7ca" opacity="0.75" transform="rotate(60 100 100)"/>
+    <ellipse cx="100" cy="60" rx="28" ry="52" fill="#8764c8" opacity="0.75" transform="rotate(120 100 100)"/>
+    <ellipse cx="100" cy="60" rx="28" ry="52" fill="#93b95f" opacity="0.8" transform="rotate(180 100 100)"/>
+    <ellipse cx="100" cy="60" rx="28" ry="52" fill="#c96b5f" opacity="0.75" transform="rotate(240 100 100)"/>
+    <ellipse cx="100" cy="60" rx="28" ry="52" fill="#f0c96b" opacity="0.75" transform="rotate(300 100 100)"/>
+    <circle cx="100" cy="100" r="36" fill="#f0c96b"/>
+    <circle cx="100" cy="100" r="28" fill="none" stroke="#fff8e0" stroke-width="1.5" opacity="0.4"/>
+  </g>
+
+  <!-- Title -->
+  <text x="600" y="380" text-anchor="middle" font-family="Georgia, serif" font-size="72" font-weight="700" fill="#f0c96b" letter-spacing="4">
+    Bloomverse
+  </text>
+
+  <!-- Subtitle -->
+  <text x="600" y="430" text-anchor="middle" font-family="Trebuchet MS, Georgia, serif" font-size="24" fill="#fff1cf" opacity="0.75" letter-spacing="2">
+    A Living Digital Civilization
+  </text>
+
+  <!-- Tagline -->
+  <text x="600" y="480" text-anchor="middle" font-family="Trebuchet MS, Georgia, serif" font-size="16" fill="#fff1cf" opacity="0.5">
+    Every citizen leaves a permanent legacy
+  </text>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="590" width="1200" height="40" fill="#f0c96b" opacity="0.08"/>
+  <text x="600" y="615" text-anchor="middle" font-family="Trebuchet MS, Georgia, serif" font-size="13" fill="#f0c96b" opacity="0.5" letter-spacing="3">
+    GITHUB.COM/MKR-INFINITY/BLOOMVERSE
+  </text>
+
+  <!-- Stars -->
+  <circle cx="150" cy="180" r="2" fill="#f0c96b" opacity="0.6"/>
+  <circle cx="1050" cy="200" r="2" fill="#75b7ca" opacity="0.5"/>
+  <circle cx="300" cy="450" r="1.5" fill="#8764c8" opacity="0.5"/>
+  <circle cx="900" cy="430" r="1.5" fill="#93b95f" opacity="0.5"/>
+  <circle cx="180" cy="380" r="1" fill="#c96b5f" opacity="0.4"/>
+  <circle cx="1020" cy="350" r="1" fill="#f0c96b" opacity="0.4"/>
+</svg>
