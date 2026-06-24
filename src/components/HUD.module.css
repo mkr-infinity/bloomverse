@@ -1,0 +1,167 @@
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  padding: 16px;
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.levelInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.levelNum {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--accent-red);
+}
+
+.levelName {
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: var(--text-primary);
+}
+
+.waveInfo {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--accent-orange);
+  background: rgba(0, 0, 0, 0.5);
+  padding: 4px 12px;
+  border: 1px solid rgba(255, 107, 45, 0.3);
+  border-radius: 2px;
+}
+
+.bottomLeft {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.healthContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.barLabel {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-secondary);
+  width: 20px;
+}
+
+.barOuter {
+  width: 140px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.barInner {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.2s ease;
+}
+
+.healthBar {
+  background: linear-gradient(90deg, #ff2d55, #ff6b2d);
+  box-shadow: 0 0 6px rgba(255, 45, 85, 0.5);
+}
+
+.armorBar {
+  background: linear-gradient(90deg, #00d4ff, #00ff88);
+  box-shadow: 0 0 6px rgba(0, 212, 255, 0.5);
+}
+
+.barValue {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--text-primary);
+  min-width: 30px;
+}
+
+.bottomRight {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+}
+
+.weaponInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.weaponName {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--accent-cyan);
+}
+
+.ammo {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+}
+
+.topRight {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.stat {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-secondary);
+}
+
+.xpBar {
+  width: 80px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.xpFill {
+  height: 100%;
+  background: var(--accent-green);
+  transition: width 0.3s ease;
+}
+
+@media (max-width: 600px) {
+  .hud { padding: 8px; }
+  .barOuter { width: 90px; }
+  .levelName { font-size: 11px; }
+}
