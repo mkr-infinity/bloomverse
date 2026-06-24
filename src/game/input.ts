@@ -15,6 +15,7 @@ export function createInput(canvas: HTMLCanvasElement) {
     if (e.code === 'KeyA' || e.code === 'ArrowLeft') state.left = true;
     if (e.code === 'KeyD' || e.code === 'ArrowRight') state.right = true;
     if (e.code === 'KeyR') state.reload = true;
+    if (e.code === 'Space') { state.shoot = true; e.preventDefault(); }
   };
   const keyUp = (e: KeyboardEvent) => {
     if (e.code === 'KeyW' || e.code === 'ArrowUp') state.up = false;
@@ -22,6 +23,7 @@ export function createInput(canvas: HTMLCanvasElement) {
     if (e.code === 'KeyA' || e.code === 'ArrowLeft') state.left = false;
     if (e.code === 'KeyD' || e.code === 'ArrowRight') state.right = false;
     if (e.code === 'KeyR') state.reload = false;
+    if (e.code === 'Space') state.shoot = false;
   };
   const mouseMove = (e: MouseEvent) => { const r = canvas.getBoundingClientRect(); state.mouseX = e.clientX - r.left; state.mouseY = e.clientY - r.top; };
   const mouseDown = () => { state.shoot = true; };
