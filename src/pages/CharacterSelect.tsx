@@ -30,7 +30,7 @@ export default function CharacterSelect() {
   }, [selected]);
 
   const handleConfirm = () => {
-    updateProgress({ selectedCharacter: CHARACTERS[selected].id } as never);
+    updateProgress({ selectedCharacter: CHARACTERS[selected].id });
     navigate('/levels');
   };
 

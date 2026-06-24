@@ -20,7 +20,7 @@ export default function Game() {
 
   const lvlIndex = Math.min((parseInt(levelId || '1') || 1) - 1, LEVELS.length - 1);
   const level = LEVELS[lvlIndex];
-  const charId = (progress as Record<string, unknown>).selectedCharacter as string || 'ghost';
+  const charId = progress.selectedCharacter || 'ghost';
   const skin = CHARACTERS.find((c) => c.id === charId) || CHARACTERS[0];
 
   useEffect(() => {
