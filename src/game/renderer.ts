@@ -99,6 +99,25 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, w: numbe
   // HUD - Bottom left health/armor
   drawHUD(ctx, state, w, h);
 
+  // Wave announcement
+  if (state.waveAnnounce > 0) {
+    const alpha = Math.min(1, state.waveAnnounce / 30);
+    const scale = 1 + (90 - state.waveAnnounce) * 0.002;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.textAlign = 'center';
+    ctx.font = `bold ${Math.floor(28 * scale)}px Orbitron, monospace`;
+    ctx.fillStyle = '#ff6b2d';
+    ctx.shadowColor = '#ff6b2d';
+    ctx.shadowBlur = 15;
+    ctx.fillText(`WAVE ${state.wave + 1}`, w / 2, h / 2 - 20);
+    ctx.font = '12px Orbitron, monospace';
+    ctx.fillStyle = '#ccc';
+    ctx.shadowBlur = 0;
+    ctx.fillText('INCOMING', w / 2, h / 2 + 5);
+    ctx.restore();
+  }
+
   // Damage vignette when health is low
   if (state.playerHealth < 40) {
     const intensity = 1 - (state.playerHealth / 40);

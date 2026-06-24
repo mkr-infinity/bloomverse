@@ -52,6 +52,7 @@ export interface GameState {
   gameOver: boolean;
   paused: boolean;
   kills: number;
+  waveAnnounce: number; // frames remaining to show wave text
 }
 
 export interface LevelDef {
@@ -109,7 +110,7 @@ export function createGameState(w: number, h: number, level: LevelDef): GameStat
     enemiesSpawned: 0, enemiesInWave: totalEnemies,
     spawnTimer: 60, screenShake: 0, frame: 0,
     isMoving: false, waveComplete: false, levelComplete: false,
-    gameOver: false, paused: false, kills: 0,
+    gameOver: false, paused: false, kills: 0, waveAnnounce: 90,
   };
 }
 
@@ -195,6 +196,7 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
       s.wave++;
       s.enemiesSpawned = 0;
       s.spawnTimer = 90;
+      s.waveAnnounce = 90;
       // Drop pickups between waves
       s.pickups.push({ x: Math.random() * (w - 100) + 50, y: Math.random() * (h - 100) + 50, type: Math.random() > 0.5 ? 'health' : 'ammo', value: Math.random() > 0.5 ? 30 : 15 });
       if (s.wave >= s.totalWaves) {
@@ -307,6 +309,9 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
 
   // Screen shake decay
   if (s.screenShake > 0) s.screenShake -= 0.5;
+
+  // Wave announce decay
+  if (s.waveAnnounce > 0) s.waveAnnounce--;
 
   // Game over
   if (s.playerHealth <= 0) {
