@@ -100,19 +100,23 @@
 .title {
   display: flex;
   gap: 2px;
+  margin-top: 6px;
 }
 
 .titleChar {
   font-family: var(--font-display);
-  font-size: 44px;
+  font-size: 58px;
   font-weight: 900;
-  letter-spacing: 4px;
-  background: linear-gradient(135deg, #ff2d55, #ff6b2d, #ffaa00);
+  letter-spacing: 3px;
+  background: linear-gradient(180deg, #fff 0%, #ffd27a 38%, #ff8a2d 62%, #c01f2f 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: charReveal 0.6s ease both;
   display: inline-block;
+  text-shadow: 0 4px 18px rgba(255, 90, 30, 0.35);
+  filter: drop-shadow(0 2px 1px rgba(0,0,0,0.6));
+  position: relative;
 }
 
 .titleChar:nth-child(1) { animation-delay: 0.3s; }
@@ -131,7 +135,12 @@
   font-size: 12px;
   letter-spacing: 6px;
   color: #fff;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+  text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+  padding: 6px 18px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255,160,80,0.3);
+  border-bottom: 1px solid rgba(255,160,80,0.3);
+  background: linear-gradient(90deg, transparent, rgba(255,120,40,0.12), transparent);
 }
 
 .pressStart {
@@ -359,9 +368,10 @@
 }
 
 @media (max-width: 500px) {
-  .title { font-size: 28px; letter-spacing: 4px; }
+  .titleChar { font-size: 36px; letter-spacing: 1px; }
   .logo { width: 90px; height: 90px; }
   .nav { width: 240px; }
   .menuBtn { padding: 11px 14px; }
   .btnText { font-size: 11px; }
+  .tagline { font-size: 10px; letter-spacing: 3px; }
 }
