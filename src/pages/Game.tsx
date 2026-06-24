@@ -144,6 +144,7 @@ export default function Game() {
       {overlay === 'win' && (
         <div className={styles.overlay}>
           <div className={styles.victoryPanel}>
+            <div className={styles.victoryRays} />
             <div className={styles.victoryBurst} />
             <div className={styles.victoryContent}>
               <div className={styles.victoryBadge}>
@@ -195,6 +196,7 @@ export default function Game() {
       {overlay === 'lose' && (
         <div className={styles.overlay}>
           <div className={styles.defeatPanel}>
+            <div className={styles.defeatRays} />
             <div className={styles.defeatSkull}>
               <svg viewBox="0 0 50 50" width="50" height="50">
                 <circle cx="25" cy="22" r="16" fill="none" stroke="#ff2d55" strokeWidth="2"/>
