@@ -147,17 +147,27 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
   // Shooting
   if (input.shoot && s.ammo > 0 && s.frame % 8 === 0) {
     const bSpeed = 10;
+    const spread = 0.05;
+    const angle = s.playerAngle + (Math.random() - 0.5) * spread;
     s.bullets.push({
-      x: s.playerX + Math.cos(s.playerAngle) * 18,
-      y: s.playerY + Math.sin(s.playerAngle) * 18,
-      vx: Math.cos(s.playerAngle) * bSpeed,
-      vy: Math.sin(s.playerAngle) * bSpeed,
-      damage: 20, life: 60,
+      x: s.playerX + Math.cos(s.playerAngle) * 20,
+      y: s.playerY + Math.sin(s.playerAngle) * 20,
+      vx: Math.cos(angle) * bSpeed,
+      vy: Math.sin(angle) * bSpeed,
+      damage: 20 + Math.floor(level.id * 2),
+      life: 60,
     });
     s.ammo--;
+    // Muzzle flash particle
+    s.particles.push({
+      x: s.playerX + Math.cos(s.playerAngle) * 22,
+      y: s.playerY + Math.sin(s.playerAngle) * 22,
+      vx: Math.cos(s.playerAngle) * 3, vy: Math.sin(s.playerAngle) * 3,
+      life: 5, color: '#ffff00', size: 5,
+    });
   }
 
-  // Reload
+  // Reload (takes time)
   if (input.reload && s.ammo < s.maxAmmo) {
     s.ammo = s.maxAmmo;
   }
@@ -215,11 +225,10 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
           dmg -= absorbed;
         }
         s.playerHealth -= dmg;
-        s.screenShake = 10;
+        s.screenShake = 12;
         e.lastAttack = now;
-        // Blood particles
-        for (let p = 0; p < 5; p++) {
-          s.particles.push({ x: s.playerX, y: s.playerY - 10, vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4, life: 30, color: '#ff0000', size: 3 });
+        for (let p = 0; p < 6; p++) {
+          s.particles.push({ x: s.playerX, y: s.playerY - 10, vx: (Math.random() - 0.5) * 5, vy: -Math.random() * 3, life: 25, color: '#ff0000', size: 3 });
         }
       }
     }
