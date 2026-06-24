@@ -103,7 +103,7 @@ export function createGameState(w: number, h: number, level: LevelDef): GameStat
   return {
     playerX: w / 2, playerY: h / 2, playerAngle: 0,
     playerHealth: 100, playerMaxHealth: 100, playerArmor: 0,
-    ammo: 30, maxAmmo: 30, score: 0,
+    ammo: 50, maxAmmo: 50, score: 0,
     wave: 0, totalWaves: level.waves.length,
     enemies: [], bullets: [], pickups: [], particles: [],
     enemiesSpawned: 0, enemiesInWave: totalEnemies,
@@ -113,8 +113,9 @@ export function createGameState(w: number, h: number, level: LevelDef): GameStat
   };
 }
 
-export function spawnEnemy(type: Enemy['type'], w: number, h: number): Enemy {
+export function spawnEnemy(type: Enemy['type'], w: number, h: number, levelId: number = 1): Enemy {
   const stats = ENEMY_STATS[type];
+  const hpScale = 1 + (levelId - 1) * 0.15;
   const side = Math.floor(Math.random() * 4);
   let x = 0, y = 0;
   switch (side) {
@@ -123,7 +124,8 @@ export function spawnEnemy(type: Enemy['type'], w: number, h: number): Enemy {
     case 2: x = Math.random() * w; y = h + 40; break;
     case 3: x = -40; y = Math.random() * h; break;
   }
-  return { x, y, type, health: stats.health, maxHealth: stats.health, speed: stats.speed, damage: stats.damage, lastAttack: 0, frame: Math.random() * 100 };
+  const hp = Math.floor(stats.health * hpScale);
+  return { x, y, type, health: hp, maxHealth: hp, speed: stats.speed, damage: stats.damage, lastAttack: 0, frame: Math.random() * 100 };
 }
 
 export function tick(state: GameState, input: { up: boolean; down: boolean; left: boolean; right: boolean; mouseX: number; mouseY: number; shoot: boolean; reload: boolean }, w: number, h: number, level: LevelDef): GameState {
@@ -182,7 +184,7 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
       for (const entry of currentWave) {
         count += entry.count;
         if (s.enemiesSpawned < count) {
-          s.enemies.push(spawnEnemy(entry.type, w, h));
+          s.enemies.push(spawnEnemy(entry.type, w, h, level.id));
           s.enemiesSpawned++;
           break;
         }
@@ -271,9 +273,11 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
           s.enemies.splice(j, 1);
           s.kills++;
           s.score += e.type === 'boss' ? 500 : e.type === 'tank' ? 100 : 25;
-          // Random drop
-          if (Math.random() < 0.2) {
-            s.pickups.push({ x: e.x, y: e.y, type: Math.random() > 0.6 ? 'armor' : Math.random() > 0.5 ? 'health' : 'ammo', value: 20 });
+          // Frequent drops
+          if (Math.random() < 0.35) {
+            const dropType = Math.random();
+            const pType = dropType > 0.6 ? 'ammo' : dropType > 0.3 ? 'health' : 'armor';
+            s.pickups.push({ x: e.x, y: e.y, type: pType, value: pType === 'ammo' ? 15 : 25 });
           }
         }
         break;
