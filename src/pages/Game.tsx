@@ -21,7 +21,7 @@ export default function Game() {
   const animRef = useRef(0);
 
   const {
-    player, progress, isPaused, isPlaying,
+    player, progress,
     setPlaying, setPaused, damagePlayer, healPlayer,
     addKill, addXP, updatePlayer, updateProgress, save,
   } = useGameStore();

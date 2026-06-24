@@ -66,7 +66,7 @@ export function createInitialState(canvasW: number, canvasH: number): GameEngine
   };
 }
 
-export function spawnEnemy(state: GameEngineState, type: Enemy['type'], canvasW: number, canvasH: number): Enemy {
+export function spawnEnemy(type: Enemy['type'], canvasW: number, canvasH: number): Enemy {
   const stats = ENEMY_STATS[type];
   const side = Math.floor(Math.random() * 4);
   let x = 0, y = 0;
@@ -128,7 +128,7 @@ export function updateEngine(
     if (s.spawnTimer <= 0 && s.waveEnemiesSpawned < totalInWave) {
       const toSpawn = pickEnemyType(waveConfig, s.waveEnemiesSpawned);
       if (toSpawn) {
-        s.enemies = [...s.enemies, spawnEnemy(s, toSpawn, canvasW, canvasH)];
+        s.enemies = [...s.enemies, spawnEnemy(toSpawn, canvasW, canvasH)];
         s.waveEnemiesSpawned++;
       }
       s.spawnTimer = waveConfig.spawnDelay;
