@@ -12,6 +12,33 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, w: numbe
   // Rich battlefield background per world
   drawBattlefield(ctx, w, h, level, state.frame);
 
+  // === CINEMATIC LIGHTING: darken the field, then a warm light pool around
+  // the player so the action reads clearly (action-game look). ===
+  ctx.fillStyle = 'rgba(2,3,10,0.34)';
+  ctx.fillRect(0, 0, w, h);
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const lp = ctx.createRadialGradient(state.playerX, state.playerY, 12, state.playerX, state.playerY, 210);
+  lp.addColorStop(0, 'rgba(255,230,180,0.22)');
+  lp.addColorStop(0.5, 'rgba(255,180,110,0.08)');
+  lp.addColorStop(1, 'transparent');
+  ctx.fillStyle = lp;
+  ctx.beginPath();
+  ctx.arc(state.playerX, state.playerY, 210, 0, Math.PI * 2);
+  ctx.fill();
+  // muzzle flash burst — the engine emits a short-lived yellow particle per shot
+  const firing = state.particles.some((p) => p.color === '#ffff00' && p.life > 2);
+  if (firing) {
+    const mx = state.playerX + Math.cos(state.playerAngle) * 24;
+    const my = state.playerY + Math.sin(state.playerAngle) * 24;
+    const mf = ctx.createRadialGradient(mx, my, 1, mx, my, 50);
+    mf.addColorStop(0, 'rgba(255,240,170,0.55)');
+    mf.addColorStop(1, 'transparent');
+    ctx.fillStyle = mf;
+    ctx.beginPath(); ctx.arc(mx, my, 50, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+
   // Pickups
   for (const p of state.pickups) {
     const pulse = 0.8 + Math.sin(state.frame * 0.08) * 0.2;
