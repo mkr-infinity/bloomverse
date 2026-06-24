@@ -5,11 +5,16 @@ import { useGameStore } from '../store/gameStore';
 import styles from './CharacterSelect.module.css';
 
 const CHAR_DATA = [
-  { desc: 'Silent and lethal. Former special ops sniper.', speed: 85, power: 70, armor: 60, role: 'ASSASSIN' },
-  { desc: 'Explosive combat specialist. Fears nothing.', speed: 65, power: 95, armor: 70, role: 'DEMOLITION' },
-  { desc: 'Stealth expert. Precision over force.', speed: 95, power: 60, armor: 50, role: 'SCOUT' },
-  { desc: 'Heavy weapons master. An unstoppable force.', speed: 50, power: 85, armor: 95, role: 'JUGGERNAUT' },
+  { desc: 'Silent and lethal. Former special ops sniper.', speed: 85, power: 70, armor: 60, role: 'ASSASSIN', rarity: 'ELITE', accent: '#00d4ff' },
+  { desc: 'Explosive combat specialist. Fears nothing.', speed: 65, power: 95, armor: 70, role: 'DEMOLITION', rarity: 'LEGEND', accent: '#ff6b2d' },
+  { desc: 'Stealth expert. Precision over force.', speed: 95, power: 60, armor: 50, role: 'SCOUT', rarity: 'RARE', accent: '#00ff88' },
+  { desc: 'Heavy weapons master. An unstoppable force.', speed: 50, power: 85, armor: 95, role: 'JUGGERNAUT', rarity: 'LEGEND', accent: '#ffcc00' },
 ];
+
+function hexA(hex: string, a: number): string {
+  const n = parseInt(hex.replace('#', ''), 16);
+  return `rgba(${(n >> 16) & 0xff},${(n >> 8) & 0xff},${n & 0xff},${a})`;
+}
 
 export default function CharacterSelect() {
   const navigate = useNavigate();
@@ -26,13 +31,32 @@ export default function CharacterSelect() {
 
     const draw = () => {
       frameRef.current++;
+      const f = frameRef.current;
+      const accent = CHAR_DATA[selected].accent;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const g = ctx.createRadialGradient(canvas.width / 2, canvas.height * 0.6, 10, canvas.width / 2, canvas.height * 0.6, 120);
-      g.addColorStop(0, 'rgba(255, 45, 85, 0.15)');
+      const cx = canvas.width / 2;
+      // spotlight cone from top
+      const cone = ctx.createLinearGradient(cx, 0, cx, canvas.height);
+      cone.addColorStop(0, hexA(accent, 0.18));
+      cone.addColorStop(1, 'transparent');
+      ctx.fillStyle = cone;
+      ctx.beginPath();
+      ctx.moveTo(cx - 30, 0);
+      ctx.lineTo(cx + 30, 0);
+      ctx.lineTo(cx + 110, canvas.height);
+      ctx.lineTo(cx - 110, canvas.height);
+      ctx.closePath();
+      ctx.fill();
+      // floor disc glow
+      const g = ctx.createRadialGradient(cx, canvas.height * 0.78, 8, cx, canvas.height * 0.78, 130);
+      g.addColorStop(0, hexA(accent, 0.35));
       g.addColorStop(1, 'transparent');
       ctx.fillStyle = g;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      drawHumanCharacter(ctx, canvas.width / 2, canvas.height * 0.62, CHARACTERS[selected], 3, 0, frameRef.current, true);
+      ctx.beginPath();
+      ctx.ellipse(cx, canvas.height * 0.8, 90, 26, 0, 0, Math.PI * 2);
+      ctx.fill();
+      const bob = Math.sin(f * 0.04) * 4;
+      drawHumanCharacter(ctx, cx, canvas.height * 0.62 + bob, CHARACTERS[selected], 3, 0, f, true);
       animRef.current = requestAnimationFrame(draw);
     };
     draw();
@@ -63,9 +87,12 @@ export default function CharacterSelect() {
       <div className={styles.main}>
         {/* Left: character display */}
         <div className={styles.display}>
-          <div className={styles.roleTag}>{data.role}</div>
+          <div className={styles.tagRow}>
+            <span className={styles.roleTag} style={{ color: data.accent, borderColor: hexA(data.accent, 0.5), background: hexA(data.accent, 0.1) }}>{data.role}</span>
+            <span className={`${styles.rarityTag} ${styles['rarity_' + data.rarity]}`}>{data.rarity}</span>
+          </div>
           <canvas ref={previewRef} width={260} height={340} className={styles.preview} />
-          <h2 className={styles.charName}>{CHARACTERS[selected].name}</h2>
+          <h2 className={styles.charName} style={{ textShadow: `0 0 24px ${hexA(data.accent, 0.5)}` }}>{CHARACTERS[selected].name}</h2>
           <p className={styles.charDesc}>{data.desc}</p>
         </div>
 
@@ -100,7 +127,7 @@ export default function CharacterSelect() {
         ))}
       </div>
 
-      <button className={styles.confirm} onClick={handleSelect}>
+      <button className={styles.confirm} onClick={handleSelect} style={{ background: `linear-gradient(135deg, ${data.accent}, ${hexA(data.accent, 0.6)})`, boxShadow: `0 6px 26px ${hexA(data.accent, 0.45)}` }}>
         <span>DEPLOY {CHARACTERS[selected].name.toUpperCase()}</span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </button>
