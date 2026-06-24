@@ -17,6 +17,7 @@ export default function Game() {
   const { progress, updateProgress, save } = useGameStore();
   const [overlay, setOverlay] = useState<'none' | 'pause' | 'win' | 'lose'>('none');
   const [stats, setStats] = useState({ kills: 0, score: 0, accuracy: 0 });
+  const overlayRef = useRef<'none' | 'pause' | 'win' | 'lose'>('none');
 
   const lvlIndex = Math.min((parseInt(levelId || '1') || 1) - 1, LEVELS.length - 1);
   const level = LEVELS[lvlIndex];
@@ -46,17 +47,19 @@ export default function Game() {
       }
       render(ctx, stateRef.current, w, h, level, skin);
 
-      if (stateRef.current.levelComplete && overlay === 'none') {
+      if (stateRef.current.levelComplete && overlayRef.current === 'none') {
         const s = stateRef.current;
-        setStats({ kills: s.kills, score: s.score, accuracy: s.ammo > 0 ? Math.round((s.kills / (30 - s.ammo + s.kills)) * 100) : 100 });
+        setStats({ kills: s.kills, score: s.score, accuracy: s.ammo > 0 ? Math.round((s.kills / Math.max(1, 30 - s.ammo + s.kills)) * 100) : 100 });
+        overlayRef.current = 'win';
         setOverlay('win');
         const next = Math.max(progress.maxLevelReached, level.id + 1);
         updateProgress({ maxLevelReached: next, totalKills: progress.totalKills + s.kills });
         save();
       }
-      if (stateRef.current.gameOver && overlay === 'none') {
+      if (stateRef.current.gameOver && overlayRef.current === 'none') {
         const s = stateRef.current;
         setStats({ kills: s.kills, score: s.score, accuracy: 0 });
+        overlayRef.current = 'lose';
         setOverlay('lose');
         updateProgress({ totalDeaths: progress.totalDeaths + 1, totalKills: progress.totalKills + s.kills });
         save();
@@ -85,10 +88,11 @@ export default function Game() {
     return () => window.removeEventListener('keydown', onKey);
   }, [overlay]);
 
-  const resume = useCallback(() => { setOverlay('none'); if (stateRef.current) stateRef.current.paused = false; }, []);
+  const resume = useCallback(() => { overlayRef.current = 'none'; setOverlay('none'); if (stateRef.current) stateRef.current.paused = false; }, []);
   const retry = useCallback(() => {
     const canvas = canvasRef.current!;
     stateRef.current = createGameState(canvas.width, canvas.height, level);
+    overlayRef.current = 'none';
     setOverlay('none');
   }, [level]);
   const nextLevel = useCallback(() => {
@@ -96,6 +100,7 @@ export default function Game() {
     navigate(`/game/${nxt}`, { replace: true });
     const canvas = canvasRef.current!;
     stateRef.current = createGameState(canvas.width, canvas.height, LEVELS[nxt - 1]);
+    overlayRef.current = 'none';
     setOverlay('none');
   }, [level.id, navigate]);
   const quit = useCallback(() => navigate('/levels'), [navigate]);
