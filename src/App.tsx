@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
-import LoadingScreen from './components/LoadingScreen';
+import PageTransition from './components/PageTransition';
 
 const MainMenu = lazy(() => import('./pages/MainMenu'));
 const CharacterSelect = lazy(() => import('./pages/CharacterSelect'));
@@ -14,7 +14,7 @@ const Archive = lazy(() => import('./pages/Archive'));
 export default function App() {
   return (
     <HashRouter>
-      <Suspense fallback={<LoadingScreen />}>
+      <Suspense fallback={<PageTransition />}>
         <Routes>
           <Route path="/" element={<MainMenu />} />
           <Route path="/character" element={<CharacterSelect />} />
