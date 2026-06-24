@@ -9,24 +9,8 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, w: numbe
     ctx.translate((Math.random() - 0.5) * state.screenShake * 2, (Math.random() - 0.5) * state.screenShake * 2);
   }
 
-  // Background
-  ctx.fillStyle = level.bg;
-  ctx.fillRect(0, 0, w, h);
-
-  // Ground grid
-  ctx.strokeStyle = level.grid;
-  ctx.lineWidth = 0.5;
-  ctx.globalAlpha = 0.4;
-  for (let x = 0; x < w; x += 50) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
-  }
-  for (let y = 0; y < h; y += 50) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-
-  // Environment details (static debris based on level seed)
-  drawEnvironment(ctx, w, h, level, state.frame);
+  // Rich battlefield background per world
+  drawBattlefield(ctx, w, h, level, state.frame);
 
   // Pickups
   for (const p of state.pickups) {
@@ -141,83 +125,206 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, w: numbe
 }
 
 
-function drawEnvironment(ctx: CanvasRenderingContext2D, w: number, h: number, level: LevelDef, frame: number) {
-  // Seed-based static debris
-  const seed = level.id * 7;
-  ctx.globalAlpha = 0.3;
+function drawBattlefield(ctx: CanvasRenderingContext2D, w: number, h: number, level: LevelDef, frame: number) {
+  const seed = level.id * 31;
+  const rand = (n: number) => {
+    const x = Math.sin(seed + n * 12.9898) * 43758.5453;
+    return x - Math.floor(x);
+  };
 
-  if (level.world === 'city' || level.world === 'burning') {
-    // Rubble / concrete chunks
-    ctx.fillStyle = '#2a2a2a';
-    for (let i = 0; i < 12; i++) {
-      const rx = ((seed + i * 137) % w);
-      const ry = ((seed + i * 89) % h);
-      const rs = 4 + (i % 5) * 2;
-      ctx.fillRect(rx, ry, rs, rs * 0.6);
-    }
+  if (level.world === 'city') {
+    // Cracked asphalt ground
+    ctx.fillStyle = '#15171c';
+    ctx.fillRect(0, 0, w, h);
+    // Road texture
+    const grd = ctx.createLinearGradient(0, 0, w, h);
+    grd.addColorStop(0, '#1a1c22');
+    grd.addColorStop(0.5, '#141519');
+    grd.addColorStop(1, '#1c1e24');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, w, h);
+    // Road markings
+    ctx.strokeStyle = 'rgba(200,180,60,0.15)';
+    ctx.lineWidth = 4;
+    ctx.setLineDash([30, 25]);
+    ctx.beginPath(); ctx.moveTo(w * 0.5, 0); ctx.lineTo(w * 0.5, h); ctx.stroke();
+    ctx.setLineDash([]);
     // Cracks
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 5; i++) {
-      const cx = ((seed + i * 200) % w);
-      const cy = ((seed + i * 150) % h);
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 8; i++) {
+      const cx = rand(i) * w, cy = rand(i + 50) * h;
       ctx.beginPath();
       ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + 20, cy + 10);
-      ctx.lineTo(cx + 25, cy + 30);
+      ctx.lineTo(cx + 30 + rand(i + 1) * 40, cy + 15);
+      ctx.lineTo(cx + 50, cy + 40 + rand(i + 2) * 30);
       ctx.stroke();
     }
+    // Abandoned cars / debris blocks
+    for (let i = 0; i < 5; i++) {
+      const cx = 60 + rand(i + 10) * (w - 120), cy = 60 + rand(i + 20) * (h - 120);
+      ctx.fillStyle = '#22242c';
+      fillRoundRect(ctx, cx, cy, 44, 22, 4);
+      ctx.fillStyle = '#181a20';
+      fillRoundRect(ctx, cx + 6, cy - 8, 30, 14, 3);
+      ctx.fillStyle = 'rgba(80,120,160,0.2)';
+      ctx.fillRect(cx + 9, cy - 6, 24, 8);
+    }
   } else if (level.world === 'desert') {
-    // Sand dunes / rocks
-    ctx.fillStyle = '#3a2a10';
-    for (let i = 0; i < 8; i++) {
-      const rx = ((seed + i * 171) % w);
-      const ry = ((seed + i * 113) % h);
+    // Sandy ground
+    const grd = ctx.createRadialGradient(w / 2, h / 2, 50, w / 2, h / 2, w);
+    grd.addColorStop(0, '#3a2e16');
+    grd.addColorStop(1, '#241c0e');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, w, h);
+    // Sand dune curves
+    ctx.strokeStyle = 'rgba(120,95,45,0.25)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 6; i++) {
+      const y = (i / 6) * h + Math.sin(frame * 0.005 + i) * 5;
       ctx.beginPath();
-      ctx.ellipse(rx, ry, 8 + i * 2, 4 + i, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(0, y);
+      for (let x = 0; x <= w; x += 40) {
+        ctx.lineTo(x, y + Math.sin(x * 0.02 + i) * 12);
+      }
+      ctx.stroke();
+    }
+    // Rocks & ruins (pillars)
+    for (let i = 0; i < 6; i++) {
+      const cx = 50 + rand(i + 5) * (w - 100), cy = 50 + rand(i + 15) * (h - 100);
+      ctx.fillStyle = '#4a3a20';
+      fillRoundRect(ctx, cx, cy, 16, 38, 3);
+      ctx.fillStyle = '#5a4628';
+      fillRoundRect(ctx, cx - 3, cy - 6, 22, 8, 2);
     }
   } else if (level.world === 'frozen') {
-    // Ice shards
-    ctx.fillStyle = '#2a4455';
-    for (let i = 0; i < 8; i++) {
-      const rx = ((seed + i * 131) % w);
-      const ry = ((seed + i * 97) % h);
-      ctx.beginPath();
-      ctx.moveTo(rx, ry);
-      ctx.lineTo(rx + 4, ry - 12);
-      ctx.lineTo(rx + 8, ry);
-      ctx.fill();
-    }
-  } else if (level.world === 'sky') {
-    // Floating fragments - slight movement
-    ctx.fillStyle = '#1a1a3a';
+    // Ice ground
+    const grd = ctx.createLinearGradient(0, 0, w, h);
+    grd.addColorStop(0, '#16242f');
+    grd.addColorStop(0.5, '#1a2e3a');
+    grd.addColorStop(1, '#122028');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, w, h);
+    // Ice cracks (web pattern)
+    ctx.strokeStyle = 'rgba(150,210,240,0.18)';
+    ctx.lineWidth = 1;
     for (let i = 0; i < 6; i++) {
-      const rx = ((seed + i * 157) % w);
-      const ry = ((seed + i * 123) % h) + Math.sin(frame * 0.01 + i) * 3;
+      const cx = rand(i + 3) * w, cy = rand(i + 33) * h;
+      for (let a = 0; a < 5; a++) {
+        const ang = (a / 5) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(ang) * 40, cy + Math.sin(ang) * 40);
+        ctx.stroke();
+      }
+    }
+    // Ice shards / snow piles
+    for (let i = 0; i < 7; i++) {
+      const cx = 40 + rand(i + 7) * (w - 80), cy = 40 + rand(i + 17) * (h - 80);
+      ctx.fillStyle = 'rgba(180,220,250,0.25)';
       ctx.beginPath();
-      ctx.moveTo(rx, ry);
-      ctx.lineTo(rx + 15, ry + 5);
-      ctx.lineTo(rx + 12, ry + 12);
-      ctx.lineTo(rx - 3, ry + 8);
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + 8, cy - 22);
+      ctx.lineTo(cx + 16, cy);
       ctx.closePath();
       ctx.fill();
     }
-  } else if (level.world === 'void') {
-    // Void particles
-    ctx.fillStyle = '#2a0a2a';
-    for (let i = 0; i < 15; i++) {
-      const rx = ((seed + i * 143 + frame * 0.2) % w);
-      const ry = ((seed + i * 107) % h);
-      const rs = 1 + Math.sin(frame * 0.02 + i) * 1;
+  } else if (level.world === 'burning') {
+    // Scorched ground
+    const grd = ctx.createRadialGradient(w / 2, h / 2, 30, w / 2, h / 2, w);
+    grd.addColorStop(0, '#2a1208');
+    grd.addColorStop(1, '#160805');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, w, h);
+    // Lava cracks (glowing)
+    const glow = 0.4 + Math.sin(frame * 0.05) * 0.2;
+    ctx.strokeStyle = `rgba(255,100,20,${glow})`;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#ff5500';
+    ctx.shadowBlur = 8;
+    for (let i = 0; i < 6; i++) {
+      const cx = rand(i + 2) * w, cy = rand(i + 22) * h;
       ctx.beginPath();
-      ctx.arc(rx, ry, rs, 0, Math.PI * 2);
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + 40 + rand(i) * 30, cy + 20);
+      ctx.lineTo(cx + 60, cy + 50);
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+    // Embers floating
+    for (let i = 0; i < 20; i++) {
+      const ex = (rand(i + 60) * w + frame * 0.3) % w;
+      const ey = (rand(i + 70) * h - frame * 0.5 + h) % h;
+      ctx.fillStyle = `rgba(255,${120 + rand(i) * 100},30,${0.4 + rand(i) * 0.4})`;
+      ctx.fillRect(ex, ey, 2, 2);
+    }
+  } else if (level.world === 'sky') {
+    // Sky void
+    const grd = ctx.createRadialGradient(w / 2, h / 2, 50, w / 2, h / 2, w);
+    grd.addColorStop(0, '#16163a');
+    grd.addColorStop(1, '#0a0a1e');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, w, h);
+    // Stars
+    for (let i = 0; i < 40; i++) {
+      const sx = rand(i) * w, sy = rand(i + 40) * h;
+      ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.sin(frame * 0.03 + i) * 0.3})`;
+      ctx.fillRect(sx, sy, 1.5, 1.5);
+    }
+    // Floating platform edges (the island they fight on)
+    ctx.fillStyle = 'rgba(40,40,80,0.4)';
+    ctx.beginPath();
+    ctx.ellipse(w / 2, h / 2, w * 0.42, h * 0.42, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(120,100,200,0.3)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(w / 2, h / 2, w * 0.42, h * 0.42, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    // Floating rocks
+    for (let i = 0; i < 5; i++) {
+      const cx = 60 + rand(i + 9) * (w - 120);
+      const cy = 60 + rand(i + 19) * (h - 120) + Math.sin(frame * 0.02 + i) * 6;
+      ctx.fillStyle = '#2a2a4a';
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + 20, cy + 6);
+      ctx.lineTo(cx + 16, cy + 16);
+      ctx.lineTo(cx - 2, cy + 12);
+      ctx.closePath();
+      ctx.fill();
+    }
+  } else { // void
+    ctx.fillStyle = '#040308';
+    ctx.fillRect(0, 0, w, h);
+    // Void energy waves
+    const grd = ctx.createRadialGradient(w / 2, h / 2, 20, w / 2, h / 2, w * 0.7);
+    grd.addColorStop(0, 'rgba(80,10,80,0.3)');
+    grd.addColorStop(0.5, 'rgba(40,5,50,0.15)');
+    grd.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, w, h);
+    // Swirling void particles
+    for (let i = 0; i < 30; i++) {
+      const ang = (i / 30) * Math.PI * 2 + frame * 0.01;
+      const dist = 100 + (i % 5) * 60 + Math.sin(frame * 0.02 + i) * 20;
+      const vx = w / 2 + Math.cos(ang) * dist;
+      const vy = h / 2 + Math.sin(ang) * dist;
+      ctx.fillStyle = `rgba(${150 + rand(i) * 100},20,${150 + rand(i) * 80},${0.3 + rand(i) * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(vx, vy, 1.5 + rand(i) * 2, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 
-  ctx.globalAlpha = 1;
+  // Subtle vignette for all
+  const vig = ctx.createRadialGradient(w / 2, h / 2, h * 0.3, w / 2, h / 2, w * 0.7);
+  vig.addColorStop(0, 'transparent');
+  vig.addColorStop(1, 'rgba(0,0,0,0.5)');
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, w, h);
 }
+
 function drawHUD(ctx: CanvasRenderingContext2D, state: GameState, w: number, h: number) {
   // Health bar - bottom left
   const hx = 16, hy = h - 50;
