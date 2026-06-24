@@ -286,6 +286,52 @@ function drawHUD(ctx: CanvasRenderingContext2D, state: GameState, w: number, h: 
   ctx.fillStyle = '#ff4455';
   ctx.font = '10px Orbitron, monospace';
   ctx.fillText(`${state.enemies.length} ENEMIES`, w - 18, 24);
+
+  // Minimap - bottom center
+  drawMinimap(ctx, state, w, h);
+}
+
+function drawMinimap(ctx: CanvasRenderingContext2D, state: GameState, canvasW: number, canvasH: number) {
+  const size = 80;
+  const mx = canvasW / 2 - size / 2;
+  const my = canvasH - size - 12;
+  const scale = size / Math.max(canvasW, canvasH);
+
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+  fillRoundRect(ctx, mx - 2, my - 2, size + 4, size + 4, 4);
+
+  // Border
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(mx, my, size, size);
+
+  // Player dot
+  const px = mx + state.playerX * scale;
+  const py = my + state.playerY * scale;
+  ctx.fillStyle = '#00d4ff';
+  ctx.beginPath();
+  ctx.arc(px, py, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Enemy dots
+  ctx.fillStyle = '#ff2d55';
+  for (const e of state.enemies) {
+    const ex = mx + e.x * scale;
+    const ey = my + e.y * scale;
+    if (ex >= mx && ex <= mx + size && ey >= my && ey <= my + size) {
+      ctx.beginPath();
+      ctx.arc(ex, ey, e.type === 'boss' ? 3 : 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Pickup dots
+  ctx.fillStyle = '#00ff88';
+  for (const p of state.pickups) {
+    const ppx = mx + p.x * scale;
+    const ppy = my + p.y * scale;
+    ctx.fillRect(ppx - 1, ppy - 1, 2, 2);
+  }
 }
 
 function fillRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {

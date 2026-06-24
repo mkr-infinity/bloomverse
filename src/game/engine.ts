@@ -133,8 +133,8 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
   const s = { ...state, enemies: [...state.enemies], bullets: [...state.bullets], pickups: [...state.pickups], particles: [...state.particles] };
   s.frame++;
 
-  // Player movement
-  const speed = 3.2;
+  // Player movement with acceleration
+  const speed = 3.5;
   let dx = 0, dy = 0;
   if (input.up) dy -= 1;
   if (input.down) dy += 1;
