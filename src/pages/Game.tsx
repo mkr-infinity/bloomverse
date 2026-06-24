@@ -15,9 +15,9 @@ export default function Game() {
   const stateRef = useRef<GameState | null>(null);
   const inputRef = useRef<ReturnType<typeof createInput> | null>(null);
   const animRef = useRef(0);
-  const { progress, updateProgress, save } = useGameStore();
+  const { progress, updateProgress, save, addCoins } = useGameStore();
   const [overlay, setOverlay] = useState<'none' | 'pause' | 'win' | 'lose'>('none');
-  const [stats, setStats] = useState({ kills: 0, score: 0, accuracy: 0 });
+  const [stats, setStats] = useState({ kills: 0, score: 0, accuracy: 0, coins: 0 });
   const overlayRef = useRef<'none' | 'pause' | 'win' | 'lose'>('none');
   const [showTutorial, setShowTutorial] = useState(() => {
     return !localStorage.getItem('bloomverse_tutorial_done');
@@ -53,19 +53,23 @@ export default function Game() {
 
       if (stateRef.current.levelComplete && overlayRef.current === 'none') {
         const s = stateRef.current;
-        setStats({ kills: s.kills, score: s.score, accuracy: s.ammo > 0 ? Math.round((s.kills / Math.max(1, 30 - s.ammo + s.kills)) * 100) : 100 });
+        const coins = level.id * 40 + s.kills * 4 + Math.floor(s.score / 20);
+        setStats({ kills: s.kills, score: s.score, accuracy: s.ammo > 0 ? Math.round((s.kills / Math.max(1, 30 - s.ammo + s.kills)) * 100) : 100, coins });
         overlayRef.current = 'win';
         setOverlay('win');
         const next = Math.max(progress.maxLevelReached, level.id + 1);
         updateProgress({ maxLevelReached: next, totalKills: progress.totalKills + s.kills });
+        addCoins(coins);
         save();
       }
       if (stateRef.current.gameOver && overlayRef.current === 'none') {
         const s = stateRef.current;
-        setStats({ kills: s.kills, score: s.score, accuracy: 0 });
+        const coins = Math.floor(s.kills * 2);
+        setStats({ kills: s.kills, score: s.score, accuracy: 0, coins });
         overlayRef.current = 'lose';
         setOverlay('lose');
         updateProgress({ totalDeaths: progress.totalDeaths + 1, totalKills: progress.totalKills + s.kills });
+        addCoins(coins);
         save();
       }
 
@@ -177,6 +181,11 @@ export default function Game() {
                 <span className={`${styles.star} ${stats.kills < 10 ? styles.starDim : ''}`}>&#9733;</span>
               </div>
 
+              <div className={styles.coinReward}>
+                <span className={styles.coinIcon}>&#9679;</span>
+                <span>+{stats.coins} COINS EARNED</span>
+              </div>
+
               <div className={styles.victoryButtons}>
                 <button className={styles.btnNext} onClick={nextLevel}>
                   NEXT MISSION <span className={styles.arrow}>&#8594;</span>
@@ -212,6 +221,7 @@ export default function Game() {
             <div className={styles.defeatStats}>
               <span>Kills: {stats.kills}</span>
               <span>Score: {stats.score}</span>
+              <span className={styles.defeatCoins}>+{stats.coins} coins</span>
             </div>
 
             <div className={styles.defeatButtons}>

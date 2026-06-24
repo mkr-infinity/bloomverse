@@ -38,6 +38,8 @@ export interface GameProgress {
   achievements: string[];
   unlockedWeapons: string[];
   selectedCharacter: string;
+  coins: number;
+  unlockedCharacters: string[];
 }
 
 interface GameState {
@@ -53,6 +55,8 @@ interface GameState {
   healPlayer: (amount: number) => void;
   addKill: () => void;
   addXP: (amount: number) => void;
+  addCoins: (amount: number) => void;
+  unlockCharacter: (id: string, price: number) => boolean;
   switchWeapon: (index: number) => void;
   save: () => Promise<void>;
   load: () => Promise<void>;
@@ -89,6 +93,8 @@ const defaultProgress: GameProgress = {
   achievements: [],
   unlockedWeapons: ['pistol', 'rifle'],
   selectedCharacter: 'ghost',
+  coins: 0,
+  unlockedCharacters: ['ghost', 'viper'],
 };
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -141,6 +147,26 @@ export const useGameStore = create<GameState>((set, get) => ({
     player: { ...s.player, activeWeaponIndex: index }
   })),
 
+  addCoins: (amount) => set((s) => ({
+    progress: { ...s.progress, coins: Math.max(0, (s.progress.coins || 0) + amount) }
+  })),
+
+  unlockCharacter: (id, price) => {
+    const { progress } = get();
+    const owned = progress.unlockedCharacters || [];
+    if (owned.includes(id)) return true;
+    if ((progress.coins || 0) < price) return false;
+    set({
+      progress: {
+        ...progress,
+        coins: (progress.coins || 0) - price,
+        unlockedCharacters: [...owned, id],
+      },
+    });
+    get().save();
+    return true;
+  },
+
   save: async () => {
     const { player, progress } = get();
     await saveData('gameState', 'player', player);
@@ -151,7 +177,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const player = await loadData<PlayerState>('gameState', 'player');
     const progress = await loadData<GameProgress>('gameState', 'progress');
     if (player) set({ player });
-    if (progress) set({ progress });
+    if (progress) set({ progress: { ...defaultProgress, ...progress } });
   },
 
   reset: () => set({ player: { ...defaultPlayer }, progress: { ...defaultProgress } }),

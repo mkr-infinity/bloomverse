@@ -6,15 +6,36 @@ export interface CharacterSkin {
   shirtColor: string;
   pantsColor: string;
   shoeColor: string;
-  hairStyle: 'buzz' | 'slick' | 'long' | 'bald';
-  gear: 'vest' | 'jacket' | 'armor' | 'hoodie';
+  hairStyle: 'buzz' | 'slick' | 'long' | 'bald' | 'mohawk';
+  gear: 'vest' | 'jacket' | 'armor' | 'hoodie' | 'tactical';
+  // Meta / progression
+  role: string;
+  rarity: 'RARE' | 'ELITE' | 'EPIC' | 'LEGEND' | 'MYTHIC';
+  accent: string;
+  desc: string;
+  speed: number;
+  power: number;
+  armorStat: number;
+  price: number; // 0 = free / starter
 }
 
 export const CHARACTERS: CharacterSkin[] = [
-  { id: 'ghost', name: 'Ghost', skinTone: '#e8b898', hairColor: '#1a1a1a', shirtColor: '#1c1c2e', pantsColor: '#2a2a3a', shoeColor: '#111', hairStyle: 'buzz', gear: 'vest' },
-  { id: 'phoenix', name: 'Phoenix', skinTone: '#c68642', hairColor: '#cc3300', shirtColor: '#880000', pantsColor: '#222', shoeColor: '#1a1a1a', hairStyle: 'slick', gear: 'jacket' },
-  { id: 'viper', name: 'Viper', skinTone: '#f5cba7', hairColor: '#2d1b00', shirtColor: '#1a4a1a', pantsColor: '#111', shoeColor: '#222', hairStyle: 'long', gear: 'armor' },
-  { id: 'blaze', name: 'Blaze', skinTone: '#6f4e37', hairColor: '#000', shirtColor: '#cc4400', pantsColor: '#1a1a1a', shoeColor: '#0a0a0a', hairStyle: 'bald', gear: 'hoodie' },
+  { id: 'ghost', name: 'Ghost', skinTone: '#e8b898', hairColor: '#1a1a1a', shirtColor: '#1c1c2e', pantsColor: '#2a2a3a', shoeColor: '#111', hairStyle: 'buzz', gear: 'vest',
+    role: 'ASSASSIN', rarity: 'ELITE', accent: '#00d4ff', desc: 'Silent and lethal. Former special ops sniper.', speed: 85, power: 70, armorStat: 60, price: 0 },
+  { id: 'viper', name: 'Viper', skinTone: '#f5cba7', hairColor: '#2d1b00', shirtColor: '#1a4a1a', pantsColor: '#111', shoeColor: '#222', hairStyle: 'long', gear: 'armor',
+    role: 'SCOUT', rarity: 'RARE', accent: '#00ff88', desc: 'Stealth expert. Precision over brute force.', speed: 95, power: 60, armorStat: 50, price: 0 },
+  { id: 'phoenix', name: 'Phoenix', skinTone: '#c68642', hairColor: '#cc3300', shirtColor: '#880000', pantsColor: '#222', shoeColor: '#1a1a1a', hairStyle: 'slick', gear: 'jacket',
+    role: 'DEMOLITION', rarity: 'LEGEND', accent: '#ff6b2d', desc: 'Explosive combat specialist. Fears nothing.', speed: 65, power: 95, armorStat: 70, price: 500 },
+  { id: 'blaze', name: 'Blaze', skinTone: '#6f4e37', hairColor: '#000', shirtColor: '#cc4400', pantsColor: '#1a1a1a', shoeColor: '#0a0a0a', hairStyle: 'bald', gear: 'hoodie',
+    role: 'JUGGERNAUT', rarity: 'LEGEND', accent: '#ffcc00', desc: 'Heavy weapons master. An unstoppable force.', speed: 50, power: 85, armorStat: 95, price: 800 },
+  { id: 'raven', name: 'Raven', skinTone: '#d9a066', hairColor: '#7a2dff', shirtColor: '#1a1a22', pantsColor: '#15151c', shoeColor: '#0a0a0a', hairStyle: 'mohawk', gear: 'tactical',
+    role: 'RECON', rarity: 'EPIC', accent: '#b14aff', desc: 'Ghost in the wire. Sees every threat first.', speed: 88, power: 72, armorStat: 64, price: 1200 },
+  { id: 'titan', name: 'Titan', skinTone: '#8d5524', hairColor: '#000', shirtColor: '#3a3f4a', pantsColor: '#222', shoeColor: '#111', hairStyle: 'bald', gear: 'armor',
+    role: 'TANK', rarity: 'LEGEND', accent: '#9aa7b5', desc: 'A walking fortress. Absorbs everything.', speed: 42, power: 80, armorStat: 100, price: 1800 },
+  { id: 'frost', name: 'Frost', skinTone: '#f0d0b0', hairColor: '#cfe8ff', shirtColor: '#16384a', pantsColor: '#10202a', shoeColor: '#0a141a', hairStyle: 'slick', gear: 'tactical',
+    role: 'MARKSMAN', rarity: 'EPIC', accent: '#66ccff', desc: 'One breath, one shot. Cold precision.', speed: 80, power: 90, armorStat: 58, price: 2500 },
+  { id: 'inferno', name: 'Inferno', skinTone: '#5a3825', hairColor: '#ff5500', shirtColor: '#1a0a0a', pantsColor: '#140606', shoeColor: '#0a0303', hairStyle: 'mohawk', gear: 'jacket',
+    role: 'BERSERKER', rarity: 'MYTHIC', accent: '#ff2d55', desc: 'Pure rage incarnate. The last thing they see.', speed: 92, power: 100, armorStat: 75, price: 4000 },
 ];
 
 function darken(hex: string, amt: number): string {
@@ -165,6 +186,21 @@ export function drawHumanCharacter(
     ctx.moveTo(2, -10 + by);
     ctx.lineTo(2, -3 + by);
     ctx.stroke();
+  } else if (skin.gear === 'tactical') {
+    // Cross-body harness straps
+    ctx.strokeStyle = darken(skin.shirtColor, 30);
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-9, -13 + by); ctx.lineTo(8, 8 + by);
+    ctx.moveTo(9, -13 + by); ctx.lineTo(-8, 8 + by);
+    ctx.stroke();
+    // Mag pouches
+    ctx.fillStyle = darken(skin.shirtColor, 38);
+    roundRect(ctx, -10, 0 + by, 6, 8, 1);
+    roundRect(ctx, 4, 0 + by, 6, 8, 1);
+    // Collar
+    ctx.fillStyle = darken(skin.shirtColor, 22);
+    roundRect(ctx, -7, -14 + by, 14, 4, 1);
   }
 
   // Belt
@@ -279,6 +315,24 @@ export function drawHumanCharacter(
     // Side hair
     roundRect(ctx, -11, -28 + by, 4, 16, 2);
     roundRect(ctx, 7, -28 + by, 4, 16, 2);
+  } else if (skin.hairStyle === 'mohawk') {
+    // Shaved sides (faint stubble)
+    ctx.fillStyle = darken(skin.skinTone, 18);
+    ctx.beginPath();
+    ctx.ellipse(0, -29 + by, 10, 6, 0, Math.PI, 0);
+    ctx.fill();
+    // Central raised crest
+    ctx.fillStyle = skin.hairColor;
+    ctx.beginPath();
+    ctx.moveTo(-3, -28 + by);
+    ctx.lineTo(-2, -40 + by);
+    ctx.lineTo(0, -34 + by);
+    ctx.lineTo(2, -41 + by);
+    ctx.lineTo(3, -28 + by);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = lighten(skin.hairColor, 30);
+    ctx.fillRect(-1, -38 + by, 2, 10);
   }
   // bald = no hair drawn
 

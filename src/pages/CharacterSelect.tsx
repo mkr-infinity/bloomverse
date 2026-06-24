@@ -4,13 +4,6 @@ import { CHARACTERS, drawHumanCharacter } from '../game/characters';
 import { useGameStore } from '../store/gameStore';
 import styles from './CharacterSelect.module.css';
 
-const CHAR_DATA = [
-  { desc: 'Silent and lethal. Former special ops sniper.', speed: 85, power: 70, armor: 60, role: 'ASSASSIN', rarity: 'ELITE', accent: '#00d4ff' },
-  { desc: 'Explosive combat specialist. Fears nothing.', speed: 65, power: 95, armor: 70, role: 'DEMOLITION', rarity: 'LEGEND', accent: '#ff6b2d' },
-  { desc: 'Stealth expert. Precision over force.', speed: 95, power: 60, armor: 50, role: 'SCOUT', rarity: 'RARE', accent: '#00ff88' },
-  { desc: 'Heavy weapons master. An unstoppable force.', speed: 50, power: 85, armor: 95, role: 'JUGGERNAUT', rarity: 'LEGEND', accent: '#ffcc00' },
-];
-
 function hexA(hex: string, a: number): string {
   const n = parseInt(hex.replace('#', ''), 16);
   return `rgba(${(n >> 16) & 0xff},${(n >> 8) & 0xff},${n & 0xff},${a})`;
@@ -18,11 +11,24 @@ function hexA(hex: string, a: number): string {
 
 export default function CharacterSelect() {
   const navigate = useNavigate();
+  const progress = useGameStore((s) => s.progress);
+  const load = useGameStore((s) => s.load);
+  const unlockCharacter = useGameStore((s) => s.unlockCharacter);
+  const updateProgress = useGameStore((s) => s.updateProgress);
+  const save = useGameStore((s) => s.save);
+
   const [selected, setSelected] = useState(0);
+  const [notice, setNotice] = useState('');
   const previewRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef(0);
   const animRef = useRef(0);
-  const updateProgress = useGameStore((s) => s.updateProgress);
+
+  useEffect(() => { load(); }, [load]);
+
+  const coins = progress.coins || 0;
+  const owned = progress.unlockedCharacters || ['ghost', 'viper'];
+  const char = CHARACTERS[selected];
+  const isOwned = char.price === 0 || owned.includes(char.id);
 
   useEffect(() => {
     const canvas = previewRef.current;
@@ -32,22 +38,17 @@ export default function CharacterSelect() {
     const draw = () => {
       frameRef.current++;
       const f = frameRef.current;
-      const accent = CHAR_DATA[selected].accent;
+      const accent = CHARACTERS[selected].accent;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const cx = canvas.width / 2;
-      // spotlight cone from top
       const cone = ctx.createLinearGradient(cx, 0, cx, canvas.height);
       cone.addColorStop(0, hexA(accent, 0.18));
       cone.addColorStop(1, 'transparent');
       ctx.fillStyle = cone;
       ctx.beginPath();
-      ctx.moveTo(cx - 30, 0);
-      ctx.lineTo(cx + 30, 0);
-      ctx.lineTo(cx + 110, canvas.height);
-      ctx.lineTo(cx - 110, canvas.height);
-      ctx.closePath();
-      ctx.fill();
-      // floor disc glow
+      ctx.moveTo(cx - 30, 0); ctx.lineTo(cx + 30, 0);
+      ctx.lineTo(cx + 110, canvas.height); ctx.lineTo(cx - 110, canvas.height);
+      ctx.closePath(); ctx.fill();
       const g = ctx.createRadialGradient(cx, canvas.height * 0.78, 8, cx, canvas.height * 0.78, 130);
       g.addColorStop(0, hexA(accent, 0.35));
       g.addColorStop(1, 'transparent');
@@ -63,79 +64,128 @@ export default function CharacterSelect() {
     return () => cancelAnimationFrame(animRef.current);
   }, [selected]);
 
-  const handleSelect = () => {
-    updateProgress({ selectedCharacter: CHARACTERS[selected].id });
+  const handleDeploy = () => {
+    if (!isOwned) {
+      if (coins < char.price) {
+        setNotice(`Need ${char.price - coins} more coins`);
+        setTimeout(() => setNotice(''), 2200);
+        return;
+      }
+      const ok = unlockCharacter(char.id, char.price);
+      if (ok) {
+        setNotice(`${char.name} unlocked!`);
+        setTimeout(() => setNotice(''), 2000);
+      }
+      return;
+    }
+    updateProgress({ selectedCharacter: char.id });
+    save();
     navigate('/levels');
   };
 
-  const data = CHAR_DATA[selected];
-
   return (
     <div className={styles.container}>
-      {/* Animated background */}
       <div className={styles.bgGlow} />
       <div className={styles.bgGrid} />
 
       <div className={styles.header}>
-        <button className={styles.back} onClick={() => navigate('/')}>
+        <button className={styles.back} onClick={() => navigate('/')} aria-label="Back">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         </button>
         <h1 className={styles.title}>SELECT OPERATIVE</h1>
-        <div style={{ width: 38 }} />
+        <div className={styles.coinBalance}>
+          <span className={styles.coinDot}>&#9679;</span>
+          {coins}
+        </div>
       </div>
 
       <div className={styles.main}>
-        {/* Left: character display */}
         <div className={styles.display}>
           <div className={styles.tagRow}>
-            <span className={styles.roleTag} style={{ color: data.accent, borderColor: hexA(data.accent, 0.5), background: hexA(data.accent, 0.1) }}>{data.role}</span>
-            <span className={`${styles.rarityTag} ${styles['rarity_' + data.rarity]}`}>{data.rarity}</span>
+            <span className={styles.roleTag} style={{ color: char.accent, borderColor: hexA(char.accent, 0.5), background: hexA(char.accent, 0.1) }}>{char.role}</span>
+            <span className={`${styles.rarityTag} ${styles['rarity_' + char.rarity]}`}>{char.rarity}</span>
           </div>
-          <canvas ref={previewRef} width={260} height={340} className={styles.preview} />
-          <h2 className={styles.charName} style={{ textShadow: `0 0 24px ${hexA(data.accent, 0.5)}` }}>{CHARACTERS[selected].name}</h2>
-          <p className={styles.charDesc}>{data.desc}</p>
+          <div className={styles.previewWrap}>
+            <canvas ref={previewRef} width={260} height={340} className={`${styles.preview} ${!isOwned ? styles.lockedPreview : ''}`} />
+            {!isOwned && (
+              <div className={styles.lockBadge}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+              </div>
+            )}
+          </div>
+          <h2 className={styles.charName} style={{ textShadow: `0 0 24px ${hexA(char.accent, 0.5)}` }}>{char.name}</h2>
+          <p className={styles.charDesc}>{char.desc}</p>
         </div>
 
-        {/* Right: stats panel */}
         <div className={styles.statsPanel}>
           <div className={styles.statRow}>
             <span className={styles.statLabel}>SPEED</span>
-            <div className={styles.statBar}><div className={styles.statFill} style={{ width: `${data.speed}%`, background: 'linear-gradient(90deg,#00d4ff,#00ff88)' }} /></div>
-            <span className={styles.statVal}>{data.speed}</span>
+            <div className={styles.statBar}><div className={styles.statFill} style={{ width: `${char.speed}%`, background: 'linear-gradient(90deg,#00d4ff,#00ff88)' }} /></div>
+            <span className={styles.statVal}>{char.speed}</span>
           </div>
           <div className={styles.statRow}>
             <span className={styles.statLabel}>POWER</span>
-            <div className={styles.statBar}><div className={styles.statFill} style={{ width: `${data.power}%`, background: 'linear-gradient(90deg,#ff6b2d,#ff2d55)' }} /></div>
-            <span className={styles.statVal}>{data.power}</span>
+            <div className={styles.statBar}><div className={styles.statFill} style={{ width: `${char.power}%`, background: 'linear-gradient(90deg,#ff6b2d,#ff2d55)' }} /></div>
+            <span className={styles.statVal}>{char.power}</span>
           </div>
           <div className={styles.statRow}>
             <span className={styles.statLabel}>ARMOR</span>
-            <div className={styles.statBar}><div className={styles.statFill} style={{ width: `${data.armor}%`, background: 'linear-gradient(90deg,#ffcc00,#ff6b2d)' }} /></div>
-            <span className={styles.statVal}>{data.armor}</span>
+            <div className={styles.statBar}><div className={styles.statFill} style={{ width: `${char.armorStat}%`, background: 'linear-gradient(90deg,#ffcc00,#ff6b2d)' }} /></div>
+            <span className={styles.statVal}>{char.armorStat}</span>
           </div>
         </div>
       </div>
 
-      {/* Character cards */}
       <div className={styles.cardRow}>
-        {CHARACTERS.map((char, i) => (
-          <button key={char.id} className={`${styles.card} ${i === selected ? styles.active : ''}`} onClick={() => setSelected(i)}>
-            <ThumbCanvas index={i} />
-            <span className={styles.cardName}>{char.name}</span>
-            {i === selected && <div className={styles.cardCheck}>&#10003;</div>}
-          </button>
-        ))}
+        {CHARACTERS.map((c, i) => {
+          const cOwned = c.price === 0 || owned.includes(c.id);
+          return (
+            <button key={c.id} className={`${styles.card} ${i === selected ? styles.active : ''} ${!cOwned ? styles.cardLocked : ''}`} onClick={() => setSelected(i)} style={i === selected ? { borderColor: c.accent, boxShadow: `0 0 20px ${hexA(c.accent, 0.4)}` } : undefined}>
+              <ThumbCanvas index={i} locked={!cOwned} />
+              <span className={styles.cardName}>{c.name}</span>
+              {cOwned ? (
+                i === selected && <div className={styles.cardCheck} style={{ background: c.accent }}>&#10003;</div>
+              ) : (
+                <div className={styles.cardPrice}><span className={styles.coinDotSm}>&#9679;</span>{c.price}</div>
+              )}
+              {!cOwned && (
+                <div className={styles.cardLockIcon}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                </div>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      <button className={styles.confirm} onClick={handleSelect} style={{ background: `linear-gradient(135deg, ${data.accent}, ${hexA(data.accent, 0.6)})`, boxShadow: `0 6px 26px ${hexA(data.accent, 0.45)}` }}>
-        <span>DEPLOY {CHARACTERS[selected].name.toUpperCase()}</span>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      {notice && <div className={styles.notice}>{notice}</div>}
+
+      <button
+        className={`${styles.confirm} ${!isOwned && coins < char.price ? styles.confirmDisabled : ''}`}
+        onClick={handleDeploy}
+        style={isOwned
+          ? { background: `linear-gradient(135deg, ${char.accent}, ${hexA(char.accent, 0.6)})`, boxShadow: `0 6px 26px ${hexA(char.accent, 0.45)}` }
+          : coins >= char.price
+            ? { background: 'linear-gradient(135deg,#ffcc00,#ff8800)', boxShadow: '0 6px 26px rgba(255,180,0,0.4)' }
+            : undefined}
+      >
+        {isOwned ? (
+          <>
+            <span>DEPLOY {char.name.toUpperCase()}</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </>
+        ) : (
+          <>
+            <span className={styles.coinDotSm}>&#9679;</span>
+            <span>UNLOCK &middot; {char.price}</span>
+          </>
+        )}
       </button>
     </div>
   );
 }
 
-function ThumbCanvas({ index }: { index: number }) {
+function ThumbCanvas({ index, locked }: { index: number; locked: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const c = ref.current;
@@ -143,6 +193,10 @@ function ThumbCanvas({ index }: { index: number }) {
     const ctx = c.getContext('2d')!;
     ctx.clearRect(0, 0, c.width, c.height);
     drawHumanCharacter(ctx, c.width / 2, c.height / 2 + 16, CHARACTERS[index], 1.1, 0, 0, false);
-  }, [index]);
+    if (locked) {
+      ctx.fillStyle = 'rgba(5,5,10,0.6)';
+      ctx.fillRect(0, 0, c.width, c.height);
+    }
+  }, [index, locked]);
   return <canvas ref={ref} width={56} height={76} className={styles.thumb} />;
 }
