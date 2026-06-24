@@ -132,188 +132,184 @@ function drawBattlefield(ctx: CanvasRenderingContext2D, w: number, h: number, le
     return x - Math.floor(x);
   };
 
-  if (level.world === 'city') {
-    // Cracked asphalt ground
-    ctx.fillStyle = '#15171c';
-    ctx.fillRect(0, 0, w, h);
-    // Road texture
-    const grd = ctx.createLinearGradient(0, 0, w, h);
-    grd.addColorStop(0, '#1a1c22');
-    grd.addColorStop(0.5, '#141519');
-    grd.addColorStop(1, '#1c1e24');
-    ctx.fillStyle = grd;
-    ctx.fillRect(0, 0, w, h);
-    // Road markings
-    ctx.strokeStyle = 'rgba(200,180,60,0.15)';
-    ctx.lineWidth = 4;
-    ctx.setLineDash([30, 25]);
-    ctx.beginPath(); ctx.moveTo(w * 0.5, 0); ctx.lineTo(w * 0.5, h); ctx.stroke();
-    ctx.setLineDash([]);
-    // Cracks
-    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-    ctx.lineWidth = 1.5;
-    for (let i = 0; i < 8; i++) {
-      const cx = rand(i) * w, cy = rand(i + 50) * h;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + 30 + rand(i + 1) * 40, cy + 15);
-      ctx.lineTo(cx + 50, cy + 40 + rand(i + 2) * 30);
-      ctx.stroke();
+  // Top-down battlefield with a sense of place: ground plane, a distant
+  // horizon band at the top (skyline of the world) and seeded structures
+  // (houses, rooftops, terrain) that make every level feel like a real spot.
+  const pal = WORLD_PALETTE[level.world] || WORLD_PALETTE.city;
+
+  // === GROUND PLANE ===
+  const g = ctx.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, pal.groundTop);
+  g.addColorStop(1, pal.groundBot);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+
+  // Soft tiled texture for depth (cheap, deterministic)
+  ctx.fillStyle = pal.tile;
+  for (let ty = 0; ty < h; ty += 64) {
+    for (let tx = ((ty / 64) % 2) * 64; tx < w; tx += 128) {
+      ctx.fillRect(tx, ty, 64, 64);
     }
-    // Abandoned cars / debris blocks
-    for (let i = 0; i < 5; i++) {
-      const cx = 60 + rand(i + 10) * (w - 120), cy = 60 + rand(i + 20) * (h - 120);
-      ctx.fillStyle = '#22242c';
-      fillRoundRect(ctx, cx, cy, 44, 22, 4);
-      ctx.fillStyle = '#181a20';
-      fillRoundRect(ctx, cx + 6, cy - 8, 30, 14, 3);
-      ctx.fillStyle = 'rgba(80,120,160,0.2)';
-      ctx.fillRect(cx + 9, cy - 6, 24, 8);
+  }
+
+  // === DISTANT HORIZON / SKYLINE (top of screen) ===
+  const hb = ctx.createLinearGradient(0, 0, 0, h * 0.16);
+  hb.addColorStop(0, pal.sky);
+  hb.addColorStop(1, 'transparent');
+  ctx.fillStyle = hb;
+  ctx.fillRect(0, 0, w, h * 0.16);
+  // skyline silhouette ridge
+  ctx.fillStyle = pal.ridge;
+  ctx.beginPath();
+  ctx.moveTo(0, h * 0.14);
+  for (let x = 0; x <= w; x += 40) {
+    const rh = pal.jagged
+      ? h * 0.14 - (20 + rand(x) * 55)
+      : h * 0.14 - (10 + Math.abs(Math.sin(x * 0.01 + seed)) * 30);
+    ctx.lineTo(x, rh);
+    if (pal.jagged) ctx.lineTo(x + 20, h * 0.14 - (10 + rand(x + 1) * 30));
+  }
+  ctx.lineTo(w, h * 0.14);
+  ctx.closePath();
+  ctx.fill();
+
+  // === WORLD-SPECIFIC GROUND DETAIL ===
+  if (level.world === 'city') {
+    // Cross roads with lane markings
+    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    ctx.fillRect(w * 0.42, 0, w * 0.16, h);
+    ctx.fillRect(0, h * 0.44, w, h * 0.16);
+    ctx.strokeStyle = 'rgba(230,200,90,0.35)';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([26, 22]);
+    ctx.beginPath(); ctx.moveTo(w * 0.5, 0); ctx.lineTo(w * 0.5, h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, h * 0.52); ctx.lineTo(w, h * 0.52); ctx.stroke();
+    ctx.setLineDash([]);
+    // Buildings (top-down rooftops) around the edges
+    for (let i = 0; i < 7; i++) {
+      const bx = 30 + rand(i) * (w - 160);
+      const by = 30 + rand(i + 9) * (h - 160);
+      if (bx > w * 0.38 && bx < w * 0.6) continue;
+      drawRooftop(ctx, bx, by, 70 + rand(i + 3) * 60, 60 + rand(i + 4) * 50, pal);
+    }
+    // Abandoned cars
+    for (let i = 0; i < 4; i++) {
+      drawCar(ctx, 60 + rand(i + 20) * (w - 120), 60 + rand(i + 30) * (h - 120), rand(i) * 6.28, rand(i + 1));
     }
   } else if (level.world === 'desert') {
-    // Sandy ground
-    const grd = ctx.createRadialGradient(w / 2, h / 2, 50, w / 2, h / 2, w);
-    grd.addColorStop(0, '#3a2e16');
-    grd.addColorStop(1, '#241c0e');
-    ctx.fillStyle = grd;
-    ctx.fillRect(0, 0, w, h);
-    // Sand dune curves
-    ctx.strokeStyle = 'rgba(120,95,45,0.25)';
+    // Sand ripples
+    ctx.strokeStyle = 'rgba(120,90,45,0.22)';
     ctx.lineWidth = 2;
-    for (let i = 0; i < 6; i++) {
-      const y = (i / 6) * h + Math.sin(frame * 0.005 + i) * 5;
+    for (let i = 0; i < 7; i++) {
+      const y = (i / 7) * h;
       ctx.beginPath();
       ctx.moveTo(0, y);
-      for (let x = 0; x <= w; x += 40) {
-        ctx.lineTo(x, y + Math.sin(x * 0.02 + i) * 12);
-      }
+      for (let x = 0; x <= w; x += 36) ctx.lineTo(x, y + Math.sin(x * 0.02 + i) * 10);
       ctx.stroke();
     }
-    // Rocks & ruins (pillars)
+    // Adobe houses + ruined pillars
+    for (let i = 0; i < 5; i++) {
+      drawRooftop(ctx, 40 + rand(i) * (w - 140), 40 + rand(i + 7) * (h - 140), 56 + rand(i) * 40, 50 + rand(i + 2) * 36, pal);
+    }
     for (let i = 0; i < 6; i++) {
       const cx = 50 + rand(i + 5) * (w - 100), cy = 50 + rand(i + 15) * (h - 100);
-      ctx.fillStyle = '#4a3a20';
-      fillRoundRect(ctx, cx, cy, 16, 38, 3);
-      ctx.fillStyle = '#5a4628';
-      fillRoundRect(ctx, cx - 3, cy - 6, 22, 8, 2);
+      ctx.fillStyle = '#6a5230';
+      ctx.beginPath(); ctx.ellipse(cx, cy, 11, 11, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#4a3820';
+      ctx.beginPath(); ctx.ellipse(cx, cy, 7, 7, 0, 0, Math.PI * 2); ctx.fill();
     }
   } else if (level.world === 'frozen') {
-    // Ice ground
-    const grd = ctx.createLinearGradient(0, 0, w, h);
-    grd.addColorStop(0, '#16242f');
-    grd.addColorStop(0.5, '#1a2e3a');
-    grd.addColorStop(1, '#122028');
-    ctx.fillStyle = grd;
+    // Ice sheet sheen
+    const sheen = ctx.createLinearGradient(0, 0, w, h);
+    sheen.addColorStop(0, 'rgba(180,220,250,0.10)');
+    sheen.addColorStop(0.5, 'transparent');
+    sheen.addColorStop(1, 'rgba(180,220,250,0.06)');
+    ctx.fillStyle = sheen;
     ctx.fillRect(0, 0, w, h);
-    // Ice cracks (web pattern)
-    ctx.strokeStyle = 'rgba(150,210,240,0.18)';
+    // Cracks
+    ctx.strokeStyle = 'rgba(150,210,240,0.2)';
     ctx.lineWidth = 1;
     for (let i = 0; i < 6; i++) {
       const cx = rand(i + 3) * w, cy = rand(i + 33) * h;
       for (let a = 0; a < 5; a++) {
         const ang = (a / 5) * Math.PI * 2;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(cx + Math.cos(ang) * 40, cy + Math.sin(ang) * 40);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(ang) * 42, cy + Math.sin(ang) * 42); ctx.stroke();
       }
     }
-    // Ice shards / snow piles
-    for (let i = 0; i < 7; i++) {
+    // Snow-roofed cabins + snow piles
+    for (let i = 0; i < 5; i++) {
+      drawRooftop(ctx, 40 + rand(i) * (w - 140), 50 + rand(i + 6) * (h - 150), 60 + rand(i) * 40, 54 + rand(i + 2) * 34, pal);
+    }
+    for (let i = 0; i < 8; i++) {
       const cx = 40 + rand(i + 7) * (w - 80), cy = 40 + rand(i + 17) * (h - 80);
-      ctx.fillStyle = 'rgba(180,220,250,0.25)';
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + 8, cy - 22);
-      ctx.lineTo(cx + 16, cy);
-      ctx.closePath();
-      ctx.fill();
+      ctx.fillStyle = 'rgba(235,245,255,0.5)';
+      ctx.beginPath(); ctx.ellipse(cx, cy, 14, 9, 0, 0, Math.PI * 2); ctx.fill();
     }
   } else if (level.world === 'burning') {
-    // Scorched ground
-    const grd = ctx.createRadialGradient(w / 2, h / 2, 30, w / 2, h / 2, w);
-    grd.addColorStop(0, '#2a1208');
-    grd.addColorStop(1, '#160805');
-    ctx.fillStyle = grd;
+    // Scorch radial
+    const sc = ctx.createRadialGradient(w / 2, h / 2, 30, w / 2, h / 2, w * 0.7);
+    sc.addColorStop(0, 'rgba(60,20,8,0.0)');
+    sc.addColorStop(1, 'rgba(10,4,3,0.5)');
+    ctx.fillStyle = sc;
     ctx.fillRect(0, 0, w, h);
-    // Lava cracks (glowing)
+    // Glowing lava cracks
     const glow = 0.4 + Math.sin(frame * 0.05) * 0.2;
     ctx.strokeStyle = `rgba(255,100,20,${glow})`;
-    ctx.lineWidth = 2;
-    ctx.shadowColor = '#ff5500';
-    ctx.shadowBlur = 8;
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = '#ff5500'; ctx.shadowBlur = 10;
     for (let i = 0; i < 6; i++) {
       const cx = rand(i + 2) * w, cy = rand(i + 22) * h;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + 40 + rand(i) * 30, cy + 20);
-      ctx.lineTo(cx + 60, cy + 50);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + 40 + rand(i) * 30, cy + 22);
+      ctx.lineTo(cx + 64, cy + 54); ctx.stroke();
     }
     ctx.shadowBlur = 0;
-    // Embers floating
-    for (let i = 0; i < 20; i++) {
+    // Burnt-out building shells
+    for (let i = 0; i < 5; i++) {
+      drawRooftop(ctx, 40 + rand(i) * (w - 150), 40 + rand(i + 8) * (h - 150), 64 + rand(i) * 50, 58 + rand(i + 3) * 40, pal);
+    }
+    // Embers
+    for (let i = 0; i < 24; i++) {
       const ex = (rand(i + 60) * w + frame * 0.3) % w;
       const ey = (rand(i + 70) * h - frame * 0.5 + h) % h;
       ctx.fillStyle = `rgba(255,${120 + rand(i) * 100},30,${0.4 + rand(i) * 0.4})`;
       ctx.fillRect(ex, ey, 2, 2);
     }
   } else if (level.world === 'sky') {
-    // Sky void
-    const grd = ctx.createRadialGradient(w / 2, h / 2, 50, w / 2, h / 2, w);
-    grd.addColorStop(0, '#16163a');
-    grd.addColorStop(1, '#0a0a1e');
-    ctx.fillStyle = grd;
-    ctx.fillRect(0, 0, w, h);
-    // Stars
-    for (let i = 0; i < 40; i++) {
+    // Floating island platform
+    ctx.fillStyle = 'rgba(40,46,90,0.5)';
+    ctx.beginPath(); ctx.ellipse(w / 2, h / 2, w * 0.44, h * 0.44, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(130,160,255,0.4)'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.ellipse(w / 2, h / 2, w * 0.44, h * 0.44, 0, 0, Math.PI * 2); ctx.stroke();
+    // Stars beyond the platform
+    for (let i = 0; i < 50; i++) {
       const sx = rand(i) * w, sy = rand(i + 40) * h;
+      const d = Math.hypot(sx - w / 2, sy - h / 2);
+      if (d < w * 0.44) continue;
       ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.sin(frame * 0.03 + i) * 0.3})`;
-      ctx.fillRect(sx, sy, 1.5, 1.5);
+      ctx.fillRect(sx, sy, 1.6, 1.6);
     }
-    // Floating platform edges (the island they fight on)
-    ctx.fillStyle = 'rgba(40,40,80,0.4)';
-    ctx.beginPath();
-    ctx.ellipse(w / 2, h / 2, w * 0.42, h * 0.42, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(120,100,200,0.3)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.ellipse(w / 2, h / 2, w * 0.42, h * 0.42, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    // Floating rocks
-    for (let i = 0; i < 5; i++) {
-      const cx = 60 + rand(i + 9) * (w - 120);
-      const cy = 60 + rand(i + 19) * (h - 120) + Math.sin(frame * 0.02 + i) * 6;
-      ctx.fillStyle = '#2a2a4a';
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + 20, cy + 6);
-      ctx.lineTo(cx + 16, cy + 16);
-      ctx.lineTo(cx - 2, cy + 12);
-      ctx.closePath();
-      ctx.fill();
+    // Sky temples
+    for (let i = 0; i < 4; i++) {
+      drawRooftop(ctx, w / 2 + (rand(i) - 0.5) * w * 0.5, h / 2 + (rand(i + 4) - 0.5) * h * 0.5, 54, 50, pal);
     }
   } else { // void
-    ctx.fillStyle = '#040308';
+    ctx.fillStyle = '#050308';
     ctx.fillRect(0, 0, w, h);
-    // Void energy waves
-    const grd = ctx.createRadialGradient(w / 2, h / 2, 20, w / 2, h / 2, w * 0.7);
-    grd.addColorStop(0, 'rgba(80,10,80,0.3)');
-    grd.addColorStop(0.5, 'rgba(40,5,50,0.15)');
-    grd.addColorStop(1, 'transparent');
-    ctx.fillStyle = grd;
+    const vg = ctx.createRadialGradient(w / 2, h / 2, 20, w / 2, h / 2, w * 0.7);
+    vg.addColorStop(0, 'rgba(90,12,90,0.32)');
+    vg.addColorStop(0.5, 'rgba(45,6,55,0.16)');
+    vg.addColorStop(1, 'transparent');
+    ctx.fillStyle = vg;
     ctx.fillRect(0, 0, w, h);
-    // Swirling void particles
-    for (let i = 0; i < 30; i++) {
-      const ang = (i / 30) * Math.PI * 2 + frame * 0.01;
+    for (let i = 0; i < 34; i++) {
+      const ang = (i / 34) * Math.PI * 2 + frame * 0.01;
       const dist = 100 + (i % 5) * 60 + Math.sin(frame * 0.02 + i) * 20;
       const vx = w / 2 + Math.cos(ang) * dist;
       const vy = h / 2 + Math.sin(ang) * dist;
       ctx.fillStyle = `rgba(${150 + rand(i) * 100},20,${150 + rand(i) * 80},${0.3 + rand(i) * 0.3})`;
-      ctx.beginPath();
-      ctx.arc(vx, vy, 1.5 + rand(i) * 2, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(vx, vy, 1.5 + rand(i) * 2, 0, Math.PI * 2); ctx.fill();
     }
   }
 
@@ -324,6 +320,65 @@ function drawBattlefield(ctx: CanvasRenderingContext2D, w: number, h: number, le
   ctx.fillStyle = vig;
   ctx.fillRect(0, 0, w, h);
 }
+
+interface Palette {
+  groundTop: string; groundBot: string; tile: string;
+  sky: string; ridge: string; jagged: boolean;
+  roof: string; roofEdge: string; roofDetail: string;
+}
+
+const WORLD_PALETTE: Record<string, Palette> = {
+  city: { groundTop: '#20232b', groundBot: '#15171c', tile: 'rgba(255,255,255,0.015)', sky: 'rgba(40,46,66,0.7)', ridge: '#0c0e16', jagged: true, roof: '#2c2f3a', roofEdge: '#1a1c24', roofDetail: '#3a3e4c' },
+  desert: { groundTop: '#7a5c34', groundBot: '#4a3620', tile: 'rgba(255,220,150,0.03)', sky: 'rgba(210,150,90,0.6)', ridge: '#5a4226', jagged: false, roof: '#8a6a3e', roofEdge: '#5c4424', roofDetail: '#a07c4a' },
+  frozen: { groundTop: '#9fc2d6', groundBot: '#4a6678', tile: 'rgba(255,255,255,0.05)', sky: 'rgba(150,190,215,0.6)', ridge: '#2a4658', jagged: true, roof: '#d8e8f2', roofEdge: '#7fa0b4', roofDetail: '#bcd6e6' },
+  burning: { groundTop: '#3a1a0e', groundBot: '#140604', tile: 'rgba(255,90,20,0.02)', sky: 'rgba(160,50,20,0.65)', ridge: '#1f0a06', jagged: true, roof: '#3a1c12', roofEdge: '#1a0a06', roofDetail: '#552413' },
+  sky: { groundTop: '#26305e', groundBot: '#141c3e', tile: 'rgba(150,180,255,0.03)', sky: 'rgba(60,90,160,0.5)', ridge: '#1a2348', jagged: false, roof: '#3a4a80', roofEdge: '#222c54', roofDetail: '#5066a0' },
+  void: { groundTop: '#15081e', groundBot: '#050308', tile: 'rgba(180,60,200,0.02)', sky: 'rgba(90,20,110,0.5)', ridge: '#1a0824', jagged: true, roof: '#2a1038', roofEdge: '#160620', roofDetail: '#3e1850' },
+};
+
+// Top-down building/house rooftop with edge shadow + chimney/skylight detail.
+function drawRooftop(ctx: CanvasRenderingContext2D, x: number, y: number, bw: number, bh: number, pal: Palette) {
+  // drop shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  fillRoundRect(ctx, x + 6, y + 8, bw, bh, 5);
+  // walls (edge)
+  ctx.fillStyle = pal.roofEdge;
+  fillRoundRect(ctx, x - 2, y - 2, bw + 4, bh + 4, 5);
+  // roof
+  ctx.fillStyle = pal.roof;
+  fillRoundRect(ctx, x, y, bw, bh, 4);
+  // roof ridge lines
+  ctx.strokeStyle = pal.roofDetail;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x + 4, y + bh / 2); ctx.lineTo(x + bw - 4, y + bh / 2);
+  ctx.stroke();
+  // skylight / AC unit
+  ctx.fillStyle = pal.roofDetail;
+  fillRoundRect(ctx, x + bw * 0.3, y + bh * 0.3, bw * 0.22, bh * 0.22, 2);
+  // chimney
+  ctx.fillStyle = pal.roofEdge;
+  ctx.fillRect(x + bw * 0.68, y + bh * 0.6, 9, 9);
+}
+
+// Simple top-down wrecked car.
+function drawCar(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, tint: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  fillRoundRect(ctx, -22, -12, 48, 26, 6);
+  ctx.fillStyle = tint > 0.5 ? '#3a2a2a' : '#283038';
+  fillRoundRect(ctx, -24, -13, 48, 26, 6);
+  // roof/cabin
+  ctx.fillStyle = tint > 0.5 ? '#241818' : '#1a2026';
+  fillRoundRect(ctx, -8, -10, 22, 20, 4);
+  // windshield glint
+  ctx.fillStyle = 'rgba(120,150,180,0.25)';
+  fillRoundRect(ctx, 12, -8, 8, 16, 2);
+  ctx.restore();
+}
+
 
 function drawHUD(ctx: CanvasRenderingContext2D, state: GameState, w: number, h: number) {
   // Health bar - bottom left
