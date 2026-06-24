@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CHARACTERS, drawHumanCharacter } from '../game/characters';
 import { useGameStore } from '../store/gameStore';
 import CoinIcon from '../components/CoinIcon';
+import ActionBackground from '../components/ActionBackground';
 import styles from './CharacterSelect.module.css';
 
 function hexA(hex: string, a: number): string {
@@ -86,8 +87,8 @@ export default function CharacterSelect() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.bgGlow} />
-      <div className={styles.bgGrid} />
+      <ActionBackground />
+      <div className={styles.scrim} />
 
       <div className={styles.header}>
         <button className={styles.back} onClick={() => navigate('/')} aria-label="Back">
@@ -110,7 +111,9 @@ export default function CharacterSelect() {
             <canvas ref={previewRef} width={260} height={340} className={`${styles.preview} ${!isOwned ? styles.lockedPreview : ''}`} />
             {!isOwned && (
               <div className={styles.lockBadge}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                <span className={styles.lockBadgeText}>LOCKED</span>
+                <span className={styles.lockBadgePrice}><CoinIcon size={13} />{char.price}</span>
               </div>
             )}
           </div>
