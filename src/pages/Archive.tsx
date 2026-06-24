@@ -13,23 +13,16 @@ export default function Archive() {
     load().then(() => setLoaded(true));
   }, [load]);
 
-  const formatTime = (ms: number) => {
-    const s = Math.floor(ms / 1000);
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    return `${h}h ${m}m`;
-  };
-
   const formatDate = (ts: number) => ts ? new Date(ts).toLocaleDateString() : 'N/A';
 
   const stats = [
     { label: 'First Play', value: formatDate(progress.firstPlayDate) },
-    { label: 'Total Play Time', value: formatTime(progress.playTime) },
-    { label: 'Levels Completed', value: `${progress.maxLevelReached - 1}` },
+    { label: 'Missions Cleared', value: `${Math.max(0, progress.maxLevelReached - 1)} / 12` },
     { label: 'Total Kills', value: `${progress.totalKills}` },
     { label: 'Total Deaths', value: `${progress.totalDeaths}` },
     { label: 'Bosses Defeated', value: `${progress.bossesDefeated}` },
-    { label: 'Highest Level', value: `${progress.maxLevelReached}` },
+    { label: 'K/D Ratio', value: progress.totalDeaths > 0 ? (progress.totalKills / progress.totalDeaths).toFixed(1) : '-' },
+    { label: 'Character', value: progress.selectedCharacter || 'Ghost' },
   ];
 
   if (!loaded) return null;
