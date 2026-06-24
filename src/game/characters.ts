@@ -17,6 +17,16 @@ export const CHARACTERS: CharacterSkin[] = [
   { id: 'blaze', name: 'Blaze', skinTone: '#6f4e37', hairColor: '#000', shirtColor: '#cc4400', pantsColor: '#1a1a1a', shoeColor: '#0a0a0a', hairStyle: 'bald', gear: 'hoodie' },
 ];
 
+function darken(hex: string, amt: number): string {
+  const n = parseInt(hex.replace('#', ''), 16);
+  return `rgb(${Math.max(0, ((n >> 16) & 0xff) - amt)},${Math.max(0, ((n >> 8) & 0xff) - amt)},${Math.max(0, (n & 0xff) - amt)})`;
+}
+
+function lighten(hex: string, amt: number): string {
+  const n = parseInt(hex.replace('#', ''), 16);
+  return `rgb(${Math.min(255, ((n >> 16) & 0xff) + amt)},${Math.min(255, ((n >> 8) & 0xff) + amt)},${Math.min(255, (n & 0xff) + amt)})`;
+}
+
 export function drawHumanCharacter(
   ctx: CanvasRenderingContext2D,
   x: number, y: number,
@@ -30,183 +40,318 @@ export function drawHumanCharacter(
   ctx.translate(x, y);
   ctx.scale(scale, scale);
 
-  const walk = moving ? Math.sin(frame * 0.12) : 0;
-  const bob = moving ? Math.abs(Math.sin(frame * 0.12)) * 1.5 : 0;
-  const armSwing = moving ? Math.sin(frame * 0.12) * 0.4 : 0;
+  const walk = moving ? Math.sin(frame * 0.13) : 0;
+  const bob = moving ? Math.abs(Math.sin(frame * 0.13)) * 1.5 : 0;
+  const arm = moving ? Math.sin(frame * 0.13) * 0.35 : 0;
 
-  // Drop shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
   ctx.beginPath();
-  ctx.ellipse(0, 30, 12, 5, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 32, 14, 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // LEGS with proper proportions
+  // === LEGS ===
+  // Left leg
   ctx.save();
-  ctx.translate(-5, 10);
-  ctx.rotate(walk * 0.4);
-  // Left thigh
+  ctx.translate(-5, 12);
+  ctx.rotate(walk * 0.35);
+  // Thigh
   ctx.fillStyle = skin.pantsColor;
-  drawRoundedLimb(ctx, -3, 0, 7, 12);
-  // Left calf
-  ctx.fillStyle = darken(skin.pantsColor, 20);
-  drawRoundedLimb(ctx, -2, 11, 6, 10);
-  // Left shoe
+  roundRect(ctx, -4, 0, 8, 13, 3);
+  // Knee crease
+  ctx.fillStyle = darken(skin.pantsColor, 15);
+  ctx.fillRect(-3, 11, 6, 2);
+  // Shin
+  ctx.fillStyle = skin.pantsColor;
+  roundRect(ctx, -3.5, 13, 7, 10, 2);
+  // Shoe
   ctx.fillStyle = skin.shoeColor;
   ctx.beginPath();
-  ctx.ellipse(1, 22, 5, 3, 0, 0, Math.PI * 2);
+  ctx.ellipse(1, 24, 6, 3.5, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.fillStyle = lighten(skin.shoeColor, 30);
+  ctx.fillRect(-2, 22, 6, 2); // sole line
   ctx.restore();
 
+  // Right leg
   ctx.save();
-  ctx.translate(5, 10);
-  ctx.rotate(-walk * 0.4);
+  ctx.translate(5, 12);
+  ctx.rotate(-walk * 0.35);
   ctx.fillStyle = skin.pantsColor;
-  drawRoundedLimb(ctx, -3, 0, 7, 12);
-  ctx.fillStyle = darken(skin.pantsColor, 20);
-  drawRoundedLimb(ctx, -2, 11, 6, 10);
+  roundRect(ctx, -4, 0, 8, 13, 3);
+  ctx.fillStyle = darken(skin.pantsColor, 15);
+  ctx.fillRect(-3, 11, 6, 2);
+  ctx.fillStyle = skin.pantsColor;
+  roundRect(ctx, -3.5, 13, 7, 10, 2);
   ctx.fillStyle = skin.shoeColor;
   ctx.beginPath();
-  ctx.ellipse(1, 22, 5, 3, 0, 0, Math.PI * 2);
+  ctx.ellipse(-1, 24, 6, 3.5, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.fillStyle = lighten(skin.shoeColor, 30);
+  ctx.fillRect(-4, 22, 6, 2);
   ctx.restore();
 
-  // TORSO - muscular proportioned
-  const ty = -bob;
+  const by = -bob;
+
+  // === TORSO ===
   ctx.fillStyle = skin.shirtColor;
-  drawRoundedLimb(ctx, -11, -12 + ty, 22, 24);
+  roundRect(ctx, -12, -14 + by, 24, 28, 4);
 
-  // Gear overlay
+  // Shirt details based on gear
   if (skin.gear === 'vest') {
-    ctx.fillStyle = darken(skin.shirtColor, 30);
-    drawRoundedLimb(ctx, -9, -10 + ty, 8, 20);
-    drawRoundedLimb(ctx, 1, -10 + ty, 8, 20);
-  } else if (skin.gear === 'armor') {
-    ctx.fillStyle = '#3a3a4a';
-    drawRoundedLimb(ctx, -10, -10 + ty, 20, 14);
-    ctx.fillStyle = '#555';
-    ctx.fillRect(-6, -4 + ty, 12, 2);
+    ctx.fillStyle = darken(skin.shirtColor, 25);
+    roundRect(ctx, -11, -12 + by, 9, 22, 2);
+    roundRect(ctx, 2, -12 + by, 9, 22, 2);
+    // Pockets
+    ctx.fillStyle = darken(skin.shirtColor, 35);
+    ctx.fillRect(-8, 2 + by, 6, 5);
+    ctx.fillRect(2, 2 + by, 6, 5);
+    // Zipper
+    ctx.fillStyle = '#888';
+    ctx.fillRect(-0.5, -10 + by, 1, 20);
   } else if (skin.gear === 'jacket') {
-    ctx.strokeStyle = darken(skin.shirtColor, 40);
-    ctx.lineWidth = 1.5;
+    // Collar
+    ctx.fillStyle = darken(skin.shirtColor, 20);
     ctx.beginPath();
-    ctx.moveTo(0, -12 + ty);
-    ctx.lineTo(0, 12 + ty);
+    ctx.moveTo(-6, -14 + by);
+    ctx.lineTo(0, -10 + by);
+    ctx.lineTo(6, -14 + by);
+    ctx.lineTo(6, -11 + by);
+    ctx.lineTo(0, -7 + by);
+    ctx.lineTo(-6, -11 + by);
+    ctx.closePath();
+    ctx.fill();
+    // Seam
+    ctx.strokeStyle = darken(skin.shirtColor, 30);
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(0, -10 + by);
+    ctx.lineTo(0, 12 + by);
+    ctx.stroke();
+  } else if (skin.gear === 'armor') {
+    // Chest plate
+    ctx.fillStyle = '#3a3a4a';
+    roundRect(ctx, -10, -12 + by, 20, 16, 3);
+    ctx.fillStyle = '#555';
+    ctx.fillRect(-7, -6 + by, 14, 2);
+    ctx.fillRect(-7, 0 + by, 14, 2);
+    // Shoulder pads
+    ctx.fillStyle = '#444';
+    ctx.beginPath();
+    ctx.ellipse(-12, -10 + by, 4, 6, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(12, -10 + by, 4, 6, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (skin.gear === 'hoodie') {
+    // Hood draping
+    ctx.fillStyle = darken(skin.shirtColor, 15);
+    ctx.beginPath();
+    ctx.moveTo(-8, -14 + by);
+    ctx.quadraticCurveTo(0, -18 + by, 8, -14 + by);
+    ctx.lineTo(6, -10 + by);
+    ctx.lineTo(-6, -10 + by);
+    ctx.closePath();
+    ctx.fill();
+    // Pocket
+    ctx.fillStyle = darken(skin.shirtColor, 20);
+    roundRect(ctx, -7, 3 + by, 14, 7, 2);
+    // String
+    ctx.strokeStyle = lighten(skin.shirtColor, 20);
+    ctx.lineWidth = 0.7;
+    ctx.beginPath();
+    ctx.moveTo(-2, -10 + by);
+    ctx.lineTo(-2, -3 + by);
+    ctx.moveTo(2, -10 + by);
+    ctx.lineTo(2, -3 + by);
     ctx.stroke();
   }
 
   // Belt
   ctx.fillStyle = '#3a2a1a';
-  ctx.fillRect(-11, 8 + ty, 22, 3);
-  ctx.fillStyle = '#888';
-  ctx.fillRect(-2, 8 + ty, 4, 3);
+  roundRect(ctx, -12, 10 + by, 24, 4, 1);
+  ctx.fillStyle = '#aaa';
+  roundRect(ctx, -3, 10 + by, 6, 4, 1);
 
-  // ARMS - proportional human arms
+  // === ARMS ===
   // Left arm
   ctx.save();
-  ctx.translate(-12, -8 + ty);
-  ctx.rotate(-armSwing - 0.1);
+  ctx.translate(-13, -9 + by);
+  ctx.rotate(-arm - 0.08);
   ctx.fillStyle = skin.shirtColor;
-  drawRoundedLimb(ctx, -3, 0, 7, 10);
+  roundRect(ctx, -4, 0, 8, 12, 3); // upper arm (sleeve)
   ctx.fillStyle = skin.skinTone;
-  drawRoundedLimb(ctx, -2, 9, 5, 8);
-  ctx.restore();
-
-  // Right arm (holding weapon)
-  ctx.save();
-  ctx.translate(12, -8 + ty);
-  ctx.rotate(armSwing + 0.2);
-  ctx.fillStyle = skin.shirtColor;
-  drawRoundedLimb(ctx, -3, 0, 7, 10);
-  ctx.fillStyle = skin.skinTone;
-  drawRoundedLimb(ctx, -2, 9, 5, 6);
-  // Gun in hand
-  ctx.fillStyle = '#2a2a2a';
-  ctx.fillRect(0, 13, 12, 4);
-  ctx.fillStyle = '#444';
-  ctx.fillRect(1, 11, 3, 5);
-  ctx.restore();
-
-  // NECK
-  ctx.fillStyle = skin.skinTone;
-  drawRoundedLimb(ctx, -3, -16 + ty, 6, 5);
-
-  // HEAD - realistic proportions
+  roundRect(ctx, -3, 11, 6, 9, 2); // forearm
+  // Hand
   ctx.fillStyle = skin.skinTone;
   ctx.beginPath();
-  ctx.ellipse(0, -22 + ty, 9, 10, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 21, 3.5, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Right arm (holding gun)
+  ctx.save();
+  ctx.translate(13, -9 + by);
+  ctx.rotate(arm + 0.15);
+  ctx.fillStyle = skin.shirtColor;
+  roundRect(ctx, -4, 0, 8, 12, 3);
+  ctx.fillStyle = skin.skinTone;
+  roundRect(ctx, -3, 11, 6, 7, 2);
+  // Hand gripping gun
+  ctx.fillStyle = skin.skinTone;
+  ctx.beginPath();
+  ctx.ellipse(0, 18, 3, 3.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Gun
+  ctx.fillStyle = '#222';
+  roundRect(ctx, -1, 16, 14, 4, 1); // barrel
+  ctx.fillStyle = '#333';
+  roundRect(ctx, 0, 14, 6, 7, 1); // grip
+  ctx.fillStyle = '#444';
+  ctx.fillRect(12, 16, 3, 2); // muzzle
+  ctx.restore();
+
+  // === NECK ===
+  ctx.fillStyle = skin.skinTone;
+  roundRect(ctx, -3.5, -18 + by, 7, 6, 2);
+
+  // === HEAD ===
+  // Head shape
+  ctx.fillStyle = skin.skinTone;
+  ctx.beginPath();
+  ctx.ellipse(0, -25 + by, 10, 11, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Jaw definition
+  ctx.fillStyle = darken(skin.skinTone, 8);
+  ctx.beginPath();
+  ctx.moveTo(-7, -20 + by);
+  ctx.quadraticCurveTo(-8, -15 + by, -4, -14 + by);
+  ctx.lineTo(4, -14 + by);
+  ctx.quadraticCurveTo(8, -15 + by, 7, -20 + by);
   ctx.fill();
 
   // Ears
+  ctx.fillStyle = skin.skinTone;
   ctx.beginPath();
-  ctx.ellipse(-9, -22 + ty, 2.5, 3.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(-10, -25 + by, 2.5, 4, -0.1, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(9, -22 + ty, 2.5, 3.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(10, -25 + by, 2.5, 4, 0.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = darken(skin.skinTone, 15);
+  ctx.beginPath();
+  ctx.ellipse(-10, -25 + by, 1.5, 2.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(10, -25 + by, 1.5, 2.5, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Hair
   ctx.fillStyle = skin.hairColor;
   if (skin.hairStyle === 'buzz') {
     ctx.beginPath();
-    ctx.ellipse(0, -25 + ty, 9, 7, 0, Math.PI, 0);
+    ctx.ellipse(0, -29 + by, 10, 7, 0, Math.PI, 0);
     ctx.fill();
+    // texture lines
+    ctx.strokeStyle = lighten(skin.hairColor, 20);
+    ctx.lineWidth = 0.5;
+    for (let i = -6; i <= 6; i += 3) {
+      ctx.beginPath();
+      ctx.moveTo(i, -34 + by);
+      ctx.lineTo(i, -28 + by);
+      ctx.stroke();
+    }
   } else if (skin.hairStyle === 'slick') {
     ctx.beginPath();
-    ctx.ellipse(0, -26 + ty, 10, 8, 0, Math.PI * 1.1, -0.1);
+    ctx.ellipse(0, -30 + by, 11, 8, 0, Math.PI * 1.1, -0.1);
     ctx.fill();
-    ctx.fillRect(6, -28 + ty, 4, 6);
+    // Swept back style
+    ctx.beginPath();
+    ctx.moveTo(7, -30 + by);
+    ctx.quadraticCurveTo(12, -28 + by, 10, -22 + by);
+    ctx.lineTo(8, -24 + by);
+    ctx.fill();
   } else if (skin.hairStyle === 'long') {
     ctx.beginPath();
-    ctx.ellipse(0, -25 + ty, 10, 8, 0, Math.PI, 0);
+    ctx.ellipse(0, -29 + by, 11, 8, 0, Math.PI, 0);
     ctx.fill();
-    ctx.fillRect(-10, -25 + ty, 4, 12);
-    ctx.fillRect(6, -25 + ty, 4, 12);
+    // Side hair
+    roundRect(ctx, -11, -28 + by, 4, 16, 2);
+    roundRect(ctx, 7, -28 + by, 4, 16, 2);
   }
+  // bald = no hair drawn
 
-  // Face features
+  // === FACE ===
   // Eyebrows
   ctx.fillStyle = skin.hairColor;
-  ctx.fillRect(-6, -25 + ty, 4, 1.5);
-  ctx.fillRect(2, -25 + ty, 4, 1.5);
+  ctx.fillRect(-7, -30 + by, 5, 1.8);
+  ctx.fillRect(2, -30 + by, 5, 1.8);
 
-  // Eyes - detailed
+  // Eyes - white
   ctx.fillStyle = '#fff';
   ctx.beginPath();
-  ctx.ellipse(-4, -22 + ty, 3, 2.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(-4, -26 + by, 3.5, 2.5, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(4, -22 + ty, 3, 2.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(4, -26 + by, 3.5, 2.5, 0, 0, Math.PI * 2);
   ctx.fill();
+
   // Iris
-  ctx.fillStyle = '#3a2a1a';
+  ctx.fillStyle = '#4a3020';
   ctx.beginPath();
-  ctx.arc(-4, -22 + ty, 1.5, 0, Math.PI * 2);
+  ctx.arc(-4, -26 + by, 1.8, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(4, -22 + ty, 1.5, 0, Math.PI * 2);
+  ctx.arc(4, -26 + by, 1.8, 0, Math.PI * 2);
   ctx.fill();
-  // Pupils
+
+  // Pupil
   ctx.fillStyle = '#000';
   ctx.beginPath();
-  ctx.arc(-4, -22 + ty, 0.8, 0, Math.PI * 2);
+  ctx.arc(-4, -26 + by, 0.9, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(4, -22 + ty, 0.8, 0, Math.PI * 2);
+  ctx.arc(4, -26 + by, 0.9, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eye highlight
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(-3.2, -27 + by, 0.6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(4.8, -27 + by, 0.6, 0, Math.PI * 2);
   ctx.fill();
 
   // Nose
-  ctx.fillStyle = darken(skin.skinTone, 15);
+  ctx.fillStyle = darken(skin.skinTone, 12);
   ctx.beginPath();
-  ctx.moveTo(-1.5, -20 + ty);
-  ctx.lineTo(0, -17 + ty);
-  ctx.lineTo(1.5, -20 + ty);
+  ctx.moveTo(-1.5, -24 + by);
+  ctx.lineTo(0, -20 + by);
+  ctx.lineTo(1.5, -24 + by);
+  ctx.fill();
+  // Nostrils
+  ctx.fillStyle = darken(skin.skinTone, 25);
+  ctx.beginPath();
+  ctx.arc(-1, -20.5 + by, 0.8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(1, -20.5 + by, 0.8, 0, Math.PI * 2);
   ctx.fill();
 
   // Mouth
-  ctx.strokeStyle = darken(skin.skinTone, 30);
-  ctx.lineWidth = 1;
+  ctx.fillStyle = darken(skin.skinTone, 35);
   ctx.beginPath();
-  ctx.arc(0, -15 + ty, 3, 0.1, Math.PI - 0.1);
+  ctx.ellipse(0, -17.5 + by, 3, 1.5, 0, 0, Math.PI);
+  ctx.fill();
+  // Upper lip
+  ctx.strokeStyle = darken(skin.skinTone, 25);
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(-3, -18 + by);
+  ctx.quadraticCurveTo(-1, -19 + by, 0, -18.5 + by);
+  ctx.quadraticCurveTo(1, -19 + by, 3, -18 + by);
   ctx.stroke();
 
   ctx.restore();
@@ -222,156 +367,168 @@ export function drawZombieHuman(
 ) {
   ctx.save();
   ctx.translate(x, y);
-
-  const sc = type === 'boss' ? 1.7 : type === 'tank' ? 1.3 : type === 'runner' ? 0.95 : 1;
+  const sc = type === 'boss' ? 1.6 : type === 'tank' ? 1.3 : type === 'runner' ? 0.95 : 1;
   ctx.scale(sc, sc);
 
-  const shamble = Math.sin(frame * 0.08) * 0.3;
-  const armReach = Math.sin(frame * 0.06) * 0.5 + 0.8;
-  const headTilt = Math.sin(frame * 0.04) * 0.1;
+  const shamble = Math.sin(frame * 0.07);
+  const reach = Math.sin(frame * 0.05) * 0.5 + 0.6;
+  const headTilt = Math.sin(frame * 0.03) * 0.08;
 
   const skinG = type === 'explosive' ? '#7a8a3a' : type === 'boss' ? '#4a3050' : '#5a7a5a';
   const clothG = type === 'explosive' ? '#5a3a1a' : type === 'boss' ? '#1a0a1a' : '#3a3a2a';
 
   // Shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
   ctx.beginPath();
-  ctx.ellipse(0, 30, 11, 4, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 32, 12, 4, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Legs shambling
+  // Legs
   ctx.save();
-  ctx.translate(-5, 10);
-  ctx.rotate(shamble);
+  ctx.translate(-5, 12);
+  ctx.rotate(shamble * 0.3);
   ctx.fillStyle = clothG;
-  drawRoundedLimb(ctx, -3, 0, 7, 12);
-  ctx.fillStyle = darken(clothG, 10);
-  drawRoundedLimb(ctx, -2, 11, 6, 9);
-  // Torn pants detail
+  roundRect(ctx, -4, 0, 8, 13, 2);
   ctx.fillStyle = skinG;
-  ctx.fillRect(-1, 8, 4, 3);
+  roundRect(ctx, -3, 13, 6, 9, 2);
+  // Torn fabric
+  ctx.fillStyle = clothG;
+  ctx.fillRect(-2, 8, 3, 4);
   ctx.restore();
 
   ctx.save();
-  ctx.translate(5, 10);
-  ctx.rotate(-shamble * 0.7);
+  ctx.translate(5, 12);
+  ctx.rotate(-shamble * 0.25);
   ctx.fillStyle = clothG;
-  drawRoundedLimb(ctx, -3, 0, 7, 12);
-  ctx.fillStyle = darken(clothG, 10);
-  drawRoundedLimb(ctx, -2, 11, 6, 9);
+  roundRect(ctx, -4, 0, 8, 13, 2);
+  ctx.fillStyle = skinG;
+  roundRect(ctx, -3, 13, 6, 9, 2);
   ctx.restore();
 
-  // Torso torn
+  // Torso
   ctx.fillStyle = clothG;
-  drawRoundedLimb(ctx, -11, -12, 22, 24);
-  // Blood/rip marks
-  ctx.fillStyle = '#4a0000';
-  ctx.fillRect(-7, -5, 5, 6);
-  ctx.fillRect(3, -1, 4, 5);
+  roundRect(ctx, -12, -14, 24, 28, 3);
+  // Blood & tears
+  ctx.fillStyle = '#3a0000';
+  ctx.fillRect(-8, -4, 5, 6);
+  ctx.fillRect(4, 0, 4, 5);
   ctx.fillStyle = skinG;
-  ctx.fillRect(-5, 0, 3, 4);
+  ctx.fillRect(-5, 1, 3, 4); // exposed flesh
+  ctx.fillRect(2, -2, 4, 3);
 
-  // Arms reaching forward
+  // Arms reaching
   ctx.save();
-  ctx.translate(-12, -8);
-  ctx.rotate(-armReach);
+  ctx.translate(-13, -9);
+  ctx.rotate(-reach);
   ctx.fillStyle = skinG;
-  drawRoundedLimb(ctx, -3, 0, 7, 12);
-  drawRoundedLimb(ctx, -2, 11, 5, 8);
-  // Clawed fingers
+  roundRect(ctx, -4, 0, 8, 13, 2);
+  roundRect(ctx, -3, 12, 6, 9, 2);
+  // Claws
   ctx.fillStyle = darken(skinG, 30);
-  ctx.fillRect(-2, 18, 2, 4);
-  ctx.fillRect(0, 17, 2, 5);
-  ctx.fillRect(2, 18, 2, 4);
+  for (let i = 0; i < 4; i++) {
+    ctx.fillRect(-2 + i * 2, 20, 1.5, 4);
+  }
   ctx.restore();
 
   ctx.save();
-  ctx.translate(12, -8);
-  ctx.rotate(armReach * 0.8);
+  ctx.translate(13, -9);
+  ctx.rotate(reach * 0.8);
   ctx.fillStyle = skinG;
-  drawRoundedLimb(ctx, -3, 0, 7, 12);
-  drawRoundedLimb(ctx, -2, 11, 5, 8);
+  roundRect(ctx, -4, 0, 8, 13, 2);
+  roundRect(ctx, -3, 12, 6, 9, 2);
   ctx.fillStyle = darken(skinG, 30);
-  ctx.fillRect(-2, 18, 2, 4);
-  ctx.fillRect(0, 17, 2, 5);
-  ctx.fillRect(2, 18, 2, 4);
+  for (let i = 0; i < 4; i++) {
+    ctx.fillRect(-2 + i * 2, 20, 1.5, 4);
+  }
   ctx.restore();
 
   // Neck
   ctx.fillStyle = skinG;
-  drawRoundedLimb(ctx, -3, -16, 6, 5);
+  roundRect(ctx, -3, -17, 6, 5, 2);
 
   // Head
   ctx.save();
   ctx.rotate(headTilt);
   ctx.fillStyle = skinG;
   ctx.beginPath();
-  ctx.ellipse(0, -22, 9, 10, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, -25, 10, 11, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Decayed face
-  ctx.fillStyle = darken(skinG, 20);
-  ctx.beginPath();
-  ctx.ellipse(3, -20, 4, 3, 0.2, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Sunken glowing eyes
-  ctx.fillStyle = '#1a0a00';
-  ctx.beginPath();
-  ctx.ellipse(-4, -23, 3, 3, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(4, -23, 3, 3, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Glow
-  ctx.fillStyle = type === 'boss' ? '#ff00ff' : type === 'explosive' ? '#ffaa00' : '#aaff00';
-  ctx.beginPath();
-  ctx.arc(-4, -23, 1.5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(4, -23, 1.5, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Mouth - gaping jaw
-  ctx.fillStyle = '#2a0000';
-  ctx.beginPath();
-  ctx.ellipse(0, -15, 4, 3, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Teeth
-  ctx.fillStyle = '#ddd';
-  ctx.fillRect(-3, -16, 2, 2);
-  ctx.fillRect(1, -16, 2, 2);
-  ctx.fillRect(-1, -14, 2, 2);
-
-  // Missing hair / wound
+  // Decay patches
   ctx.fillStyle = darken(skinG, 25);
   ctx.beginPath();
-  ctx.arc(-3, -29, 5, 0, Math.PI * 1.5);
+  ctx.ellipse(4, -22, 4, 3, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(-6, -28, 3, 2, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Sunken eye sockets
+  ctx.fillStyle = '#0a0500';
+  ctx.beginPath();
+  ctx.ellipse(-4, -27, 3.5, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(4, -27, 3.5, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Glowing eyes
+  const eyeColor = type === 'boss' ? '#ff00ff' : type === 'explosive' ? '#ffaa00' : '#aaff00';
+  ctx.fillStyle = eyeColor;
+  ctx.shadowColor = eyeColor;
+  ctx.shadowBlur = 4;
+  ctx.beginPath();
+  ctx.arc(-4, -27, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(4, -27, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Mouth - open jaw
+  ctx.fillStyle = '#1a0000';
+  ctx.beginPath();
+  ctx.ellipse(0, -18, 5, 3.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Teeth
+  ctx.fillStyle = '#ccc';
+  ctx.fillRect(-4, -20, 2, 2.5);
+  ctx.fillRect(-1, -19.5, 1.5, 2);
+  ctx.fillRect(2, -20, 2, 2.5);
+  // Lower teeth
+  ctx.fillRect(-3, -16.5, 1.5, 2);
+  ctx.fillRect(1, -16.5, 2, 2);
+
+  // Missing scalp
+  ctx.fillStyle = darken(skinG, 30);
+  ctx.beginPath();
+  ctx.arc(-2, -33, 5, 0, Math.PI);
   ctx.fill();
 
   ctx.restore();
 
-  // Explosive glow ring
+  // Explosive glow
   if (type === 'explosive') {
-    ctx.strokeStyle = `rgba(255, 150, 0, ${0.4 + Math.sin(frame * 0.15) * 0.3})`;
+    ctx.strokeStyle = `rgba(255, 140, 0, ${0.4 + Math.sin(frame * 0.12) * 0.3})`;
     ctx.lineWidth = 2;
-    ctx.setLineDash([4, 4]);
+    ctx.setLineDash([3, 3]);
     ctx.beginPath();
-    ctx.arc(0, 0, 25, 0, Math.PI * 2);
+    ctx.arc(0, 0, 26, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
   }
 
-  // Boss crown of bone
+  // Boss bone crown
   if (type === 'boss') {
     ctx.fillStyle = '#ddd';
-    const spikes = 5;
-    for (let i = 0; i < spikes; i++) {
-      const a = Math.PI + (i / (spikes - 1)) * Math.PI;
+    for (let i = 0; i < 5; i++) {
+      const a = Math.PI + (i / 4) * Math.PI;
+      const bx = Math.cos(a) * 9;
+      const by2 = -33 + Math.sin(a) * 2;
       ctx.beginPath();
-      ctx.moveTo(Math.cos(a) * 8, -30 + Math.sin(a) * 3);
-      ctx.lineTo(Math.cos(a) * 6, -37);
-      ctx.lineTo(Math.cos(a) * 10, -30 + Math.sin(a) * 3);
+      ctx.moveTo(bx - 2, by2);
+      ctx.lineTo(bx, by2 - 7);
+      ctx.lineTo(bx + 2, by2);
       ctx.fill();
     }
   }
@@ -380,16 +537,16 @@ export function drawZombieHuman(
 
   // Health bar
   if (health < maxHealth) {
-    const barW = 28 * sc;
+    const barW = 26 * sc;
     ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.fillRect(x - barW / 2 - 1, y - 38 * sc - 1, barW + 2, 6);
+    ctx.fillRect(x - barW / 2 - 1, y - 40 * sc, barW + 2, 5);
     ctx.fillStyle = type === 'boss' ? '#cc00cc' : '#cc2222';
-    ctx.fillRect(x - barW / 2, y - 38 * sc, barW * (health / maxHealth), 4);
+    ctx.fillRect(x - barW / 2, y - 40 * sc + 0.5, barW * (health / maxHealth), 4);
   }
 }
 
-function drawRoundedLimb(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  const r = Math.min(w, h) * 0.3;
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  r = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);
@@ -402,12 +559,4 @@ function drawRoundedLimb(ctx: CanvasRenderingContext2D, x: number, y: number, w:
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
   ctx.fill();
-}
-
-function darken(hex: string, amount: number): string {
-  const num = parseInt(hex.replace('#', ''), 16);
-  const r = Math.max(0, ((num >> 16) & 0xff) - amount);
-  const g = Math.max(0, ((num >> 8) & 0xff) - amount);
-  const b = Math.max(0, (num & 0xff) - amount);
-  return `rgb(${r},${g},${b})`;
 }
