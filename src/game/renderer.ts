@@ -98,6 +98,27 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, w: numbe
 
   // HUD - Bottom left health/armor
   drawHUD(ctx, state, w, h);
+
+  // Damage vignette when health is low
+  if (state.playerHealth < 40) {
+    const intensity = 1 - (state.playerHealth / 40);
+    ctx.fillStyle = `rgba(100, 0, 0, ${intensity * 0.3})`;
+    ctx.fillRect(0, 0, w, h);
+    // Pulsing red border
+    const pulse = 0.3 + Math.sin(state.frame * 0.1) * 0.15;
+    ctx.shadowColor = `rgba(255, 0, 0, ${pulse * intensity})`;
+    ctx.shadowBlur = 40;
+    ctx.strokeStyle = `rgba(255, 0, 0, ${pulse * intensity})`;
+    ctx.lineWidth = 8;
+    ctx.strokeRect(0, 0, w, h);
+    ctx.shadowBlur = 0;
+  }
+
+  // Screen flash on damage (screen shake correlates)
+  if (state.screenShake > 8) {
+    ctx.fillStyle = `rgba(255, 0, 0, ${(state.screenShake - 8) * 0.03})`;
+    ctx.fillRect(0, 0, w, h);
+  }
 }
 
 
