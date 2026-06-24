@@ -46,6 +46,13 @@ export default function ActionBackground() {
       x: RND(i * 2.3), y: RND(i * 1.9), sp: 0.15 + RND(i) * 0.4, sw: (RND(i + 4) - 0.5) * 0.5, s: 0.7 + RND(i + 1) * 1.8,
     }));
 
+    // Dragons: a large foreground dragon and a smaller distant one, each
+    // crossing the sky on its own loop with flapping wings and breath glow.
+    const dragons = [
+      { x: -0.25, y: 0.30, sp: 0.00045, scale: 1.0, dir: 1, breath: 0.0 },
+      { x: 0.6, y: 0.16, sp: 0.00028, scale: 0.55, dir: -1, breath: 0.0 },
+    ];
+
     const draw = () => {
       frame++;
       const t = frame;
@@ -123,6 +130,19 @@ export default function ActionBackground() {
       haze.addColorStop(1, 'transparent');
       ctx.fillStyle = haze;
       ctx.fillRect(0, horizon - 40, w, 100);
+
+      // === DRAGONS soaring across the sky ===
+      for (const d of dragons) {
+        d.x += d.sp * d.dir;
+        if (d.dir > 0 && d.x > 1.3) { d.x = -0.3; }
+        if (d.dir < 0 && d.x < -0.3) { d.x = 1.3; }
+        const dx = d.x * w;
+        const dy = d.y * h + Math.sin(t * 0.012 + d.scale * 5) * h * 0.03;
+        // periodic fire breath
+        const breathPhase = (t * 0.01 + d.scale * 10) % 8;
+        d.breath = breathPhase < 1.2 ? (1.2 - breathPhase) / 1.2 : 0;
+        drawDragon(ctx, dx, dy, 70 * d.scale, d.dir, t, d.breath);
+      }
 
       // === RAVENS circling ===
       for (const r of ravens) {
@@ -272,6 +292,113 @@ function drawCitadel(ctx: CanvasRenderingContext2D, cx: number, baseY: number, h
   ctx.fillRect(-78 * s - 1.5 * s, -60 * s, 3 * s, 5 * s);
   ctx.fillRect(78 * s - 1.5 * s, -64 * s, 3 * s, 5 * s);
 
+  ctx.restore();
+}
+
+function drawDragon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, dir: number, t: number, breath: number) {
+  const u = size / 70;
+  const flap = Math.sin(t * 0.12 + x * 0.01);
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(dir, 1);
+
+  // rim light from the sunset behind
+  ctx.shadowColor = 'rgba(255,170,90,0.5)';
+  ctx.shadowBlur = 12 * u;
+  ctx.fillStyle = '#0c0a12';
+
+  // tail (curving back)
+  ctx.beginPath();
+  ctx.moveTo(-6 * u, 2 * u);
+  ctx.quadraticCurveTo(-46 * u, 6 * u + flap * 4 * u, -78 * u, -10 * u);
+  ctx.quadraticCurveTo(-50 * u, 16 * u, -6 * u, 8 * u);
+  ctx.closePath();
+  ctx.fill();
+  // tail barb
+  ctx.beginPath();
+  ctx.moveTo(-78 * u, -10 * u);
+  ctx.lineTo(-90 * u, -16 * u);
+  ctx.lineTo(-80 * u, -2 * u);
+  ctx.closePath();
+  ctx.fill();
+
+  // body
+  ctx.beginPath();
+  ctx.ellipse(0, 2 * u, 22 * u, 9 * u, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // neck + head reaching forward
+  ctx.beginPath();
+  ctx.moveTo(14 * u, -2 * u);
+  ctx.quadraticCurveTo(34 * u, -14 * u, 46 * u, -16 * u);
+  ctx.quadraticCurveTo(36 * u, -6 * u, 18 * u, 6 * u);
+  ctx.closePath();
+  ctx.fill();
+  // head + jaw
+  ctx.beginPath();
+  ctx.moveTo(44 * u, -18 * u);
+  ctx.lineTo(58 * u, -16 * u);
+  ctx.lineTo(54 * u, -10 * u);
+  ctx.lineTo(44 * u, -10 * u);
+  ctx.closePath();
+  ctx.fill();
+  // horns
+  ctx.beginPath();
+  ctx.moveTo(46 * u, -18 * u); ctx.lineTo(48 * u, -26 * u); ctx.lineTo(50 * u, -18 * u);
+  ctx.closePath(); ctx.fill();
+
+  // WINGS (flapping) — far wing first (dimmer), then near wing
+  const wingUp = flap * 0.9;
+  ctx.save();
+  ctx.globalAlpha = 0.65;
+  drawWing(ctx, 2 * u, -2 * u, u, -0.5 - wingUp);
+  ctx.restore();
+  drawWing(ctx, 4 * u, 0, u, 0.2 + wingUp);
+
+  ctx.shadowBlur = 0;
+
+  // fire breath
+  if (breath > 0) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const fx = 58 * u, fy = -13 * u;
+    const fl = ctx.createRadialGradient(fx, fy, 1, fx + 60 * u, fy, 70 * u * breath);
+    fl.addColorStop(0, `rgba(255,230,150,${0.7 * breath})`);
+    fl.addColorStop(0.4, `rgba(255,130,40,${0.5 * breath})`);
+    fl.addColorStop(1, 'transparent');
+    ctx.fillStyle = fl;
+    ctx.beginPath();
+    ctx.moveTo(fx, fy - 4 * u);
+    ctx.lineTo(fx + 80 * u * breath, fy - 18 * u * breath);
+    ctx.lineTo(fx + 92 * u * breath, fy);
+    ctx.lineTo(fx + 80 * u * breath, fy + 18 * u * breath);
+    ctx.lineTo(fx, fy + 4 * u);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+function drawWing(ctx: CanvasRenderingContext2D, ox: number, oy: number, u: number, lift: number) {
+  ctx.save();
+  ctx.translate(ox, oy);
+  ctx.rotate(lift);
+  ctx.fillStyle = '#0c0a12';
+  // membrane
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(-10 * u, -42 * u);
+  ctx.lineTo(8 * u, -30 * u);
+  ctx.lineTo(22 * u, -40 * u);
+  ctx.lineTo(20 * u, -22 * u);
+  ctx.lineTo(34 * u, -28 * u);
+  ctx.lineTo(26 * u, -10 * u);
+  ctx.lineTo(38 * u, -8 * u);
+  ctx.quadraticCurveTo(18 * u, 6 * u, 0, 0);
+  ctx.closePath();
+  ctx.fill();
   ctx.restore();
 }
 
