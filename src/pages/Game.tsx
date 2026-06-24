@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
-import { LEVELS, createGameState, tick, GameState } from '../game/engine';
+import { getLevel, createGameState, tick, GameState } from '../game/engine';
 import { render } from '../game/renderer';
 import { createInput } from '../game/input';
 import { CHARACTERS } from '../game/characters';
@@ -23,8 +23,8 @@ export default function Game() {
     return !localStorage.getItem('bloomverse_tutorial_done');
   });
 
-  const lvlIndex = Math.min((parseInt(levelId || '1') || 1) - 1, LEVELS.length - 1);
-  const level = LEVELS[lvlIndex];
+  const lvlId = Math.max(1, parseInt(levelId || '1') || 1);
+  const level = getLevel(lvlId);
   const charId = progress.selectedCharacter || 'ghost';
   const skin = CHARACTERS.find((c) => c.id === charId) || CHARACTERS[0];
 
@@ -100,10 +100,10 @@ export default function Game() {
     setOverlay('none');
   }, [level]);
   const nextLevel = useCallback(() => {
-    const nxt = Math.min(level.id + 1, LEVELS.length);
+    const nxt = level.id + 1;
     navigate(`/game/${nxt}`, { replace: true });
     const canvas = canvasRef.current!;
-    stateRef.current = createGameState(canvas.width, canvas.height, LEVELS[nxt - 1]);
+    stateRef.current = createGameState(canvas.width, canvas.height, getLevel(nxt));
     overlayRef.current = 'none';
     setOverlay('none');
   }, [level.id, navigate]);

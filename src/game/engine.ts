@@ -91,6 +91,73 @@ export const LEVELS: LevelDef[] = [
     waves: [[{type:'runner',count:18},{type:'tank',count:6},{type:'explosive',count:6}],[{type:'boss',count:2},{type:'tank',count:5},{type:'explosive',count:8}],[{type:'boss',count:3},{type:'tank',count:6},{type:'runner',count:15}]] },
 ];
 
+// === INFINITE LEVEL SYSTEM (Subway-Surfers style endless progression) ===
+// Worlds cycle every 2 levels. Beyond the handcrafted set, levels are generated
+// procedurally with escalating difficulty so progression never ends.
+const WORLD_ORDER = ['city', 'desert', 'frozen', 'burning', 'sky', 'void'];
+
+const AREA_NAMES: Record<string, string[]> = {
+  city: ['City Outskirts', 'Market District', 'Downtown Ruins', 'Subway Tunnels', 'Rooftop Run', 'Police Plaza'],
+  desert: ['Highway Ruins', 'Desert Compound', 'Sandstorm Pass', 'Oasis Outpost', 'Buried Temple', 'Dune Fortress'],
+  frozen: ['Frozen Bridge', 'Ice Factory', 'Glacier Camp', 'Frostbite Lab', 'Avalanche Ridge', 'Polar Station'],
+  burning: ['Burning Streets', 'Collapsed Tower', 'Magma Quarter', 'Ash Boulevard', 'Inferno Gate', 'Cinder Spire'],
+  sky: ['Sky Platform', 'Floating Arena', 'Cloud Bastion', 'Storm Deck', 'Sky Citadel', 'Heaven Fracture'],
+  void: ['Void Gate', 'Final Dimension', 'Null Expanse', 'Abyss Core', 'Entropy Field', 'The Last Bloom'],
+};
+
+function worldForLevel(id: number): string {
+  return WORLD_ORDER[Math.floor((id - 1) / 2) % WORLD_ORDER.length];
+}
+
+function nameForLevel(id: number, world: string): string {
+  const names = AREA_NAMES[world];
+  const cycle = Math.floor((id - 1) / (WORLD_ORDER.length * 2));
+  const idx = Math.floor((id - 1) / 2) % WORLD_ORDER.length;
+  const base = names[Math.min(idx + (cycle % 2) * 2, names.length - 1)] || names[0];
+  return cycle > 0 ? `${base} ${['', 'II', 'III', 'IV', 'V', 'VI'][Math.min(cycle, 6)]}`.trim() : base;
+}
+
+// Generate escalating waves for any level id.
+function generateWaves(id: number): { type: Enemy['type']; count: number }[][] {
+  const tier = Math.floor((id - 1) / 2); // 0,0,1,1,2,2...
+  const numWaves = Math.min(3 + Math.floor(id / 8), 6);
+  const waves: { type: Enemy['type']; count: number }[][] = [];
+  for (let w = 0; w < numWaves; w++) {
+    const intensity = 1 + tier * 0.25 + w * 0.15;
+    const wave: { type: Enemy['type']; count: number }[] = [];
+    wave.push({ type: 'runner', count: Math.round((4 + tier) * intensity) });
+    if (id >= 2) wave.push({ type: 'walker', count: Math.round((3 + tier * 0.5) * intensity) });
+    if (id >= 4) wave.push({ type: 'tank', count: Math.max(1, Math.round((tier * 0.4) * intensity)) });
+    if (id >= 5) wave.push({ type: 'explosive', count: Math.max(1, Math.round((tier * 0.5) * intensity)) });
+    // Boss on the final wave of every 4th level (and scaling later)
+    if (w === numWaves - 1 && id >= 7 && id % 4 === 3) {
+      wave.push({ type: 'boss', count: Math.min(1 + Math.floor(tier / 6), 3) });
+    } else if (w === numWaves - 1 && id >= 10 && id % 5 === 0) {
+      wave.push({ type: 'boss', count: 1 });
+    }
+    waves.push(wave);
+  }
+  return waves;
+}
+
+// The "official" number of crafted milestones shown before pure procedural levels.
+// Levels are infinite; this just controls how many nodes the map renders by default.
+export const BASE_LEVEL_COUNT = LEVELS.length;
+
+// Returns a level definition for ANY id (1..infinity).
+export function getLevel(id: number): LevelDef {
+  if (id <= LEVELS.length) return LEVELS[id - 1];
+  const world = worldForLevel(id);
+  return {
+    id,
+    name: nameForLevel(id, world),
+    world,
+    bg: '#0a0a0f',
+    grid: '#1a1a25',
+    waves: generateWaves(id),
+  };
+}
+
 const ENEMY_STATS: Record<Enemy['type'], { health: number; speed: number; damage: number }> = {
   walker: { health: 40, speed: 0.8, damage: 8 },
   runner: { health: 25, speed: 2.0, damage: 12 },
