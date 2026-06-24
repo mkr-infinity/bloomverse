@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { getLevel, getLevelInfo, BASE_LEVEL_COUNT } from '../game/engine';
+import CoinIcon from '../components/CoinIcon';
 import styles from './LevelMap.module.css';
 
 const WORLD_LABEL: Record<string, string> = {
@@ -57,7 +58,7 @@ export default function LevelMap() {
           <p className={styles.headerSub}>Endless mission map</p>
         </div>
         <div className={styles.headerRight}>
-          <div className={styles.coinBalance}><span className={styles.coinDot}>&#9679;</span>{progress.coins || 0}</div>
+          <div className={styles.coinBalance}><CoinIcon size={15} />{progress.coins || 0}</div>
           <div className={styles.headerBadge}>LV {maxLevel}</div>
         </div>
       </div>
@@ -107,7 +108,7 @@ export default function LevelMap() {
                       <span className={`${styles.nodeName} ${unlocked ? styles.nameVisible : ''}`}>{lvl.name}</span>
                       <div className={styles.nodeMeta}>
                         <span className={styles.metaEnemies}>{info.enemyCount} hostiles</span>
-                        <span className={styles.metaReward}><span className={styles.coinDotSm}>&#9679;</span>{info.reward}</span>
+                        <span className={styles.metaReward}><CoinIcon size={11} />{info.reward}</span>
                       </div>
                     </div>
                   </div>

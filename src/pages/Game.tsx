@@ -6,6 +6,7 @@ import { render } from '../game/renderer';
 import { createInput } from '../game/input';
 import { CHARACTERS } from '../game/characters';
 import Tutorial from '../components/Tutorial';
+import CoinIcon from '../components/CoinIcon';
 import styles from './Game.module.css';
 
 export default function Game() {
@@ -182,7 +183,7 @@ export default function Game() {
               </div>
 
               <div className={styles.coinReward}>
-                <span className={styles.coinIcon}>&#9679;</span>
+                <CoinIcon size={18} />
                 <span>+{stats.coins} COINS EARNED</span>
               </div>
 

@@ -23,7 +23,7 @@ export const CHARACTERS: CharacterSkin[] = [
   { id: 'ghost', name: 'Ghost', skinTone: '#e8b898', hairColor: '#1a1a1a', shirtColor: '#1c1c2e', pantsColor: '#2a2a3a', shoeColor: '#111', hairStyle: 'buzz', gear: 'vest',
     role: 'ASSASSIN', rarity: 'ELITE', accent: '#00d4ff', desc: 'Silent and lethal. Former special ops sniper.', speed: 85, power: 70, armorStat: 60, price: 0 },
   { id: 'viper', name: 'Viper', skinTone: '#f5cba7', hairColor: '#2d1b00', shirtColor: '#1a4a1a', pantsColor: '#111', shoeColor: '#222', hairStyle: 'long', gear: 'armor',
-    role: 'SCOUT', rarity: 'RARE', accent: '#00ff88', desc: 'Stealth expert. Precision over brute force.', speed: 95, power: 60, armorStat: 50, price: 0 },
+    role: 'SCOUT', rarity: 'RARE', accent: '#00ff88', desc: 'Stealth expert. Precision over brute force.', speed: 95, power: 60, armorStat: 50, price: 350 },
   { id: 'phoenix', name: 'Phoenix', skinTone: '#c68642', hairColor: '#cc3300', shirtColor: '#880000', pantsColor: '#222', shoeColor: '#1a1a1a', hairStyle: 'slick', gear: 'jacket',
     role: 'DEMOLITION', rarity: 'LEGEND', accent: '#ff6b2d', desc: 'Explosive combat specialist. Fears nothing.', speed: 65, power: 95, armorStat: 70, price: 500 },
   { id: 'blaze', name: 'Blaze', skinTone: '#6f4e37', hairColor: '#000', shirtColor: '#cc4400', pantsColor: '#1a1a1a', shoeColor: '#0a0a0a', hairStyle: 'bald', gear: 'hoodie',

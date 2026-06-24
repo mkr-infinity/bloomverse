@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CHARACTERS, drawHumanCharacter } from '../game/characters';
 import { useGameStore } from '../store/gameStore';
+import CoinIcon from '../components/CoinIcon';
 import styles from './CharacterSelect.module.css';
 
 function hexA(hex: string, a: number): string {
@@ -26,7 +27,7 @@ export default function CharacterSelect() {
   useEffect(() => { load(); }, [load]);
 
   const coins = progress.coins || 0;
-  const owned = progress.unlockedCharacters || ['ghost', 'viper'];
+  const owned = progress.unlockedCharacters || ['ghost'];
   const char = CHARACTERS[selected];
   const isOwned = char.price === 0 || owned.includes(char.id);
 
@@ -94,7 +95,7 @@ export default function CharacterSelect() {
         </button>
         <h1 className={styles.title}>SELECT OPERATIVE</h1>
         <div className={styles.coinBalance}>
-          <span className={styles.coinDot}>&#9679;</span>
+          <CoinIcon size={16} />
           {coins}
         </div>
       </div>
@@ -146,7 +147,7 @@ export default function CharacterSelect() {
               {cOwned ? (
                 i === selected && <div className={styles.cardCheck} style={{ background: c.accent }}>&#10003;</div>
               ) : (
-                <div className={styles.cardPrice}><span className={styles.coinDotSm}>&#9679;</span>{c.price}</div>
+                <div className={styles.cardPrice}><CoinIcon size={10} />{c.price}</div>
               )}
               {!cOwned && (
                 <div className={styles.cardLockIcon}>
@@ -176,7 +177,7 @@ export default function CharacterSelect() {
           </>
         ) : (
           <>
-            <span className={styles.coinDotSm}>&#9679;</span>
+            <CoinIcon size={16} />
             <span>UNLOCK &middot; {char.price}</span>
           </>
         )}

@@ -94,7 +94,7 @@ const defaultProgress: GameProgress = {
   unlockedWeapons: ['pistol', 'rifle'],
   selectedCharacter: 'ghost',
   coins: 0,
-  unlockedCharacters: ['ghost', 'viper'],
+  unlockedCharacters: ['ghost'],
 };
 
 export const useGameStore = create<GameState>((set, get) => ({
