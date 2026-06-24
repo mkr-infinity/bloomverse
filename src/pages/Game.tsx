@@ -15,8 +15,8 @@ export default function Game() {
   const inputRef = useRef<ReturnType<typeof createInput> | null>(null);
   const animRef = useRef(0);
   const { progress, updateProgress, save } = useGameStore();
-
   const [overlay, setOverlay] = useState<'none' | 'pause' | 'win' | 'lose'>('none');
+  const [stats, setStats] = useState({ kills: 0, score: 0, accuracy: 0 });
 
   const lvlIndex = Math.min((parseInt(levelId || '1') || 1) - 1, LEVELS.length - 1);
   const level = LEVELS[lvlIndex];
@@ -39,19 +39,26 @@ export default function Game() {
     const loop = () => {
       if (!stateRef.current || !inputRef.current) return;
       const w = canvas.width, h = canvas.height;
+      const gs = stateRef.current;
 
-      stateRef.current = tick(stateRef.current, inputRef.current.state, w, h, level);
+      if (!gs.paused && !gs.gameOver && !gs.levelComplete) {
+        stateRef.current = tick(gs, inputRef.current.state, w, h, level);
+      }
       render(ctx, stateRef.current, w, h, level, skin);
 
       if (stateRef.current.levelComplete && overlay === 'none') {
+        const s = stateRef.current;
+        setStats({ kills: s.kills, score: s.score, accuracy: s.ammo > 0 ? Math.round((s.kills / (30 - s.ammo + s.kills)) * 100) : 100 });
         setOverlay('win');
         const next = Math.max(progress.maxLevelReached, level.id + 1);
-        updateProgress({ maxLevelReached: next, totalKills: progress.totalKills + stateRef.current.kills });
+        updateProgress({ maxLevelReached: next, totalKills: progress.totalKills + s.kills });
         save();
       }
       if (stateRef.current.gameOver && overlay === 'none') {
+        const s = stateRef.current;
+        setStats({ kills: s.kills, score: s.score, accuracy: 0 });
         setOverlay('lose');
-        updateProgress({ totalDeaths: progress.totalDeaths + 1, totalKills: progress.totalKills + stateRef.current.kills });
+        updateProgress({ totalDeaths: progress.totalDeaths + 1, totalKills: progress.totalKills + s.kills });
         save();
       }
 
@@ -70,71 +77,136 @@ export default function Game() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.code === 'Escape') {
-        if (overlay === 'none') {
-          setOverlay('pause');
-          if (stateRef.current) stateRef.current.paused = true;
-        } else if (overlay === 'pause') {
-          setOverlay('none');
-          if (stateRef.current) stateRef.current.paused = false;
-        }
+        if (overlay === 'none') { setOverlay('pause'); if (stateRef.current) stateRef.current.paused = true; }
+        else if (overlay === 'pause') { setOverlay('none'); if (stateRef.current) stateRef.current.paused = false; }
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [overlay]);
 
-  const resume = useCallback(() => {
-    setOverlay('none');
-    if (stateRef.current) stateRef.current.paused = false;
-  }, []);
-
+  const resume = useCallback(() => { setOverlay('none'); if (stateRef.current) stateRef.current.paused = false; }, []);
   const retry = useCallback(() => {
     const canvas = canvasRef.current!;
     stateRef.current = createGameState(canvas.width, canvas.height, level);
     setOverlay('none');
   }, [level]);
-
   const nextLevel = useCallback(() => {
-    const nextId = Math.min(level.id + 1, LEVELS.length);
-    navigate(`/game/${nextId}`);
+    const nxt = Math.min(level.id + 1, LEVELS.length);
+    navigate(`/game/${nxt}`, { replace: true });
     const canvas = canvasRef.current!;
-    stateRef.current = createGameState(canvas.width, canvas.height, LEVELS[nextId - 1]);
+    stateRef.current = createGameState(canvas.width, canvas.height, LEVELS[nxt - 1]);
     setOverlay('none');
   }, [level.id, navigate]);
-
   const quit = useCallback(() => navigate('/levels'), [navigate]);
+  const home = useCallback(() => navigate('/'), [navigate]);
 
   return (
     <div className={styles.container}>
       <canvas ref={canvasRef} className={styles.canvas} />
+
+      {/* PAUSE OVERLAY */}
       {overlay === 'pause' && (
         <div className={styles.overlay}>
-          <div className={styles.panel}>
-            <h2 className={styles.panelTitle}>PAUSED</h2>
-            <button className={styles.btn} onClick={resume}>RESUME</button>
-            <button className={styles.btn} onClick={retry}>RESTART</button>
-            <button className={`${styles.btn} ${styles.danger}`} onClick={quit}>QUIT</button>
+          <div className={styles.pausePanel}>
+            <div className={styles.pauseIcon}>II</div>
+            <h2 className={styles.pauseTitle}>GAME PAUSED</h2>
+            <p className={styles.pauseSub}>Level {level.id} - {level.name}</p>
+            <div className={styles.pauseButtons}>
+              <button className={styles.btnResume} onClick={resume}>
+                <span className={styles.btnPlay}>&#9654;</span> RESUME
+              </button>
+              <button className={styles.btnSecondary} onClick={retry}>RESTART LEVEL</button>
+              <button className={styles.btnDanger} onClick={quit}>QUIT TO MAP</button>
+            </div>
+            <p className={styles.hint}>ESC to resume</p>
           </div>
         </div>
       )}
+
+      {/* VICTORY OVERLAY - Free Fire style */}
       {overlay === 'win' && (
         <div className={styles.overlay}>
-          <div className={styles.panel}>
-            <h2 className={styles.panelTitleGreen}>MISSION COMPLETE</h2>
-            <p className={styles.sub}>{level.name}</p>
-            <p className={styles.score}>Score: {stateRef.current?.score || 0}</p>
-            <button className={`${styles.btn} ${styles.primary}`} onClick={nextLevel}>NEXT MISSION</button>
-            <button className={styles.btn} onClick={quit}>BACK TO MAP</button>
+          <div className={styles.victoryPanel}>
+            <div className={styles.victoryBurst} />
+            <div className={styles.victoryContent}>
+              <div className={styles.victoryBadge}>
+                <svg viewBox="0 0 60 60" width="60" height="60">
+                  <polygon points="30,2 38,22 60,22 42,36 48,58 30,44 12,58 18,36 0,22 22,22" fill="#ffcc00" stroke="#ff8800" strokeWidth="2"/>
+                </svg>
+              </div>
+              <h1 className={styles.victoryTitle}>VICTORY</h1>
+              <p className={styles.victoryLevel}>MISSION {level.id} COMPLETE</p>
+              <p className={styles.victoryName}>{level.name}</p>
+
+              <div className={styles.statsGrid}>
+                <div className={styles.statBox}>
+                  <span className={styles.statValue}>{stats.kills}</span>
+                  <span className={styles.statLabel}>KILLS</span>
+                </div>
+                <div className={styles.statBox}>
+                  <span className={styles.statValue}>{stats.score}</span>
+                  <span className={styles.statLabel}>SCORE</span>
+                </div>
+                <div className={styles.statBox}>
+                  <span className={styles.statValue}>{stats.accuracy}%</span>
+                  <span className={styles.statLabel}>ACCURACY</span>
+                </div>
+              </div>
+
+              <div className={styles.ratingStars}>
+                <span className={styles.star}>&#9733;</span>
+                <span className={styles.star}>&#9733;</span>
+                <span className={`${styles.star} ${stats.kills < 10 ? styles.starDim : ''}`}>&#9733;</span>
+              </div>
+
+              <div className={styles.victoryButtons}>
+                <button className={styles.btnNext} onClick={nextLevel}>
+                  NEXT MISSION <span className={styles.arrow}>&#8594;</span>
+                </button>
+                <div className={styles.victorySecRow}>
+                  <button className={styles.btnSmall} onClick={retry}>REPLAY</button>
+                  <button className={styles.btnSmall} onClick={quit}>MAP</button>
+                  <button className={styles.btnSmall} onClick={home}>HOME</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
+
+      {/* DEFEAT OVERLAY - Free Fire style */}
       {overlay === 'lose' && (
         <div className={styles.overlay}>
-          <div className={styles.panel}>
-            <h2 className={styles.panelTitleRed}>YOU DIED</h2>
-            <p className={styles.sub}>The undead claimed you.</p>
-            <button className={`${styles.btn} ${styles.primary}`} onClick={retry}>TRY AGAIN</button>
-            <button className={styles.btn} onClick={quit}>BACK TO MAP</button>
+          <div className={styles.defeatPanel}>
+            <div className={styles.defeatSkull}>
+              <svg viewBox="0 0 50 50" width="50" height="50">
+                <circle cx="25" cy="22" r="16" fill="none" stroke="#ff2d55" strokeWidth="2"/>
+                <circle cx="19" cy="20" r="4" fill="#ff2d55"/>
+                <circle cx="31" cy="20" r="4" fill="#ff2d55"/>
+                <path d="M18 32 L20 30 L22 32 L24 30 L26 32 L28 30 L30 32 L32 30" fill="none" stroke="#ff2d55" strokeWidth="1.5"/>
+              </svg>
+            </div>
+            <h1 className={styles.defeatTitle}>DEFEATED</h1>
+            <p className={styles.defeatMsg}>The horde was too strong.</p>
+            <p className={styles.defeatMotivation}>Get back up. Fight harder.</p>
+
+            <div className={styles.defeatStats}>
+              <span>Kills: {stats.kills}</span>
+              <span>Score: {stats.score}</span>
+            </div>
+
+            <div className={styles.defeatButtons}>
+              <button className={styles.btnRetry} onClick={retry}>
+                TRY AGAIN <span className={styles.arrow}>&#8635;</span>
+              </button>
+              <div className={styles.defeatSecRow}>
+                <button className={styles.btnSmall} onClick={quit}>MAP</button>
+                <button className={styles.btnSmall} onClick={home}>HOME</button>
+              </div>
+            </div>
+
+            <p className={styles.defeatQuote}>"Every death makes you stronger."</p>
           </div>
         </div>
       )}
