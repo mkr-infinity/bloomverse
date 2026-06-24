@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CHARACTERS, CharacterSkin, drawCharacter } from '../game/characters';
+import { CHARACTERS, CharacterSkin, drawHumanCharacter } from '../game/characters';
 import { useGameStore } from '../store/gameStore';
 import styles from './CharacterSelect.module.css';
 
@@ -22,7 +22,7 @@ export default function CharacterSelect() {
     const draw = () => {
       frameRef.current++;
       ctx.clearRect(0, 0, 200, 200);
-      drawCharacter(ctx, 100, 120, CHARACTERS[selected], 2.5, 0, frameRef.current, true);
+      drawHumanCharacter(ctx, 100, 130, CHARACTERS[selected], 2.2, 0, frameRef.current, true);
       anim = requestAnimationFrame(draw);
     };
     draw();
@@ -74,7 +74,7 @@ function CharacterThumb({ skin }: { skin: CharacterSkin }) {
     const ctx = canvas.getContext('2d')!;
     canvas.width = 60;
     canvas.height = 80;
-    drawCharacter(ctx, 30, 50, skin, 1.2, 0, 0, false);
+    drawHumanCharacter(ctx, 30, 55, skin, 1.1, 0, 0, false);
   }, [skin]);
   return <canvas ref={ref} className={styles.thumb} />;
 }

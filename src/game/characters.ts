@@ -1,173 +1,218 @@
 export interface CharacterSkin {
   id: string;
   name: string;
-  body: string;
-  shirt: string;
-  pants: string;
-  hair: string;
-  hairStyle: 'short' | 'long' | 'mohawk' | 'bald';
-  shoes: string;
-  accessory: 'none' | 'helmet' | 'bandana' | 'goggles';
-  gender: 'male' | 'female';
+  skinTone: string;
+  hairColor: string;
+  shirtColor: string;
+  pantsColor: string;
+  shoeColor: string;
+  hairStyle: 'buzz' | 'slick' | 'long' | 'bald';
+  gear: 'vest' | 'jacket' | 'armor' | 'hoodie';
 }
 
 export const CHARACTERS: CharacterSkin[] = [
-  {
-    id: 'ghost', name: 'Ghost',
-    body: '#d4a574', shirt: '#1a1a2e', pants: '#2d2d44',
-    hair: '#1a1a1a', hairStyle: 'short', shoes: '#111',
-    accessory: 'bandana', gender: 'male',
-  },
-  {
-    id: 'phoenix', name: 'Phoenix',
-    body: '#c68642', shirt: '#8b0000', pants: '#2f2f2f',
-    hair: '#ff4500', hairStyle: 'mohawk', shoes: '#222',
-    accessory: 'goggles', gender: 'male',
-  },
-  {
-    id: 'viper', name: 'Viper',
-    body: '#f5cba7', shirt: '#006400', pants: '#1a1a1a',
-    hair: '#2d1b00', hairStyle: 'long', shoes: '#333',
-    accessory: 'none', gender: 'female',
-  },
-  {
-    id: 'blaze', name: 'Blaze',
-    body: '#8d5524', shirt: '#ff6600', pants: '#333',
-    hair: '#000', hairStyle: 'bald', shoes: '#1a1a1a',
-    accessory: 'helmet', gender: 'male',
-  },
+  { id: 'ghost', name: 'Ghost', skinTone: '#e8b898', hairColor: '#1a1a1a', shirtColor: '#1c1c2e', pantsColor: '#2a2a3a', shoeColor: '#111', hairStyle: 'buzz', gear: 'vest' },
+  { id: 'phoenix', name: 'Phoenix', skinTone: '#c68642', hairColor: '#cc3300', shirtColor: '#880000', pantsColor: '#222', shoeColor: '#1a1a1a', hairStyle: 'slick', gear: 'jacket' },
+  { id: 'viper', name: 'Viper', skinTone: '#f5cba7', hairColor: '#2d1b00', shirtColor: '#1a4a1a', pantsColor: '#111', shoeColor: '#222', hairStyle: 'long', gear: 'armor' },
+  { id: 'blaze', name: 'Blaze', skinTone: '#6f4e37', hairColor: '#000', shirtColor: '#cc4400', pantsColor: '#1a1a1a', shoeColor: '#0a0a0a', hairStyle: 'bald', gear: 'hoodie' },
 ];
 
-export function drawCharacter(
+export function drawHumanCharacter(
   ctx: CanvasRenderingContext2D,
   x: number, y: number,
   skin: CharacterSkin,
-  scale: number = 1,
-  angle: number = 0,
-  frame: number = 0,
-  isMoving: boolean = false,
+  scale: number,
+  _angle: number,
+  frame: number,
+  moving: boolean,
 ) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
 
-  const legSwing = isMoving ? Math.sin(frame * 0.15) * 8 : 0;
-  const armSwing = isMoving ? Math.sin(frame * 0.15) * 12 : 0;
-  const bodyBob = isMoving ? Math.abs(Math.sin(frame * 0.15)) * 2 : 0;
+  const walk = moving ? Math.sin(frame * 0.12) : 0;
+  const bob = moving ? Math.abs(Math.sin(frame * 0.12)) * 1.5 : 0;
+  const armSwing = moving ? Math.sin(frame * 0.12) * 0.4 : 0;
 
-  // Shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  // Drop shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
   ctx.beginPath();
-  ctx.ellipse(0, 28, 10, 4, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 30, 12, 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Legs
-  ctx.fillStyle = skin.pants;
+  // LEGS with proper proportions
   ctx.save();
-  ctx.translate(-4, 12);
-  ctx.rotate((legSwing * Math.PI) / 180);
-  ctx.fillRect(-3, 0, 6, 16);
-  ctx.fillStyle = skin.shoes;
-  ctx.fillRect(-3, 14, 7, 4);
-  ctx.restore();
-
-  ctx.fillStyle = skin.pants;
-  ctx.save();
-  ctx.translate(4, 12);
-  ctx.rotate((-legSwing * Math.PI) / 180);
-  ctx.fillRect(-3, 0, 6, 16);
-  ctx.fillStyle = skin.shoes;
-  ctx.fillRect(-4, 14, 7, 4);
-  ctx.restore();
-
-  // Body / Shirt
-  ctx.fillStyle = skin.shirt;
-  const by = -bodyBob;
+  ctx.translate(-5, 10);
+  ctx.rotate(walk * 0.4);
+  // Left thigh
+  ctx.fillStyle = skin.pantsColor;
+  drawRoundedLimb(ctx, -3, 0, 7, 12);
+  // Left calf
+  ctx.fillStyle = darken(skin.pantsColor, 20);
+  drawRoundedLimb(ctx, -2, 11, 6, 10);
+  // Left shoe
+  ctx.fillStyle = skin.shoeColor;
   ctx.beginPath();
-  ctx.roundRect(-9, -8 + by, 18, 22, 3);
+  ctx.ellipse(1, 22, 5, 3, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(5, 10);
+  ctx.rotate(-walk * 0.4);
+  ctx.fillStyle = skin.pantsColor;
+  drawRoundedLimb(ctx, -3, 0, 7, 12);
+  ctx.fillStyle = darken(skin.pantsColor, 20);
+  drawRoundedLimb(ctx, -2, 11, 6, 10);
+  ctx.fillStyle = skin.shoeColor;
+  ctx.beginPath();
+  ctx.ellipse(1, 22, 5, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // TORSO - muscular proportioned
+  const ty = -bob;
+  ctx.fillStyle = skin.shirtColor;
+  drawRoundedLimb(ctx, -11, -12 + ty, 22, 24);
+
+  // Gear overlay
+  if (skin.gear === 'vest') {
+    ctx.fillStyle = darken(skin.shirtColor, 30);
+    drawRoundedLimb(ctx, -9, -10 + ty, 8, 20);
+    drawRoundedLimb(ctx, 1, -10 + ty, 8, 20);
+  } else if (skin.gear === 'armor') {
+    ctx.fillStyle = '#3a3a4a';
+    drawRoundedLimb(ctx, -10, -10 + ty, 20, 14);
+    ctx.fillStyle = '#555';
+    ctx.fillRect(-6, -4 + ty, 12, 2);
+  } else if (skin.gear === 'jacket') {
+    ctx.strokeStyle = darken(skin.shirtColor, 40);
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -12 + ty);
+    ctx.lineTo(0, 12 + ty);
+    ctx.stroke();
+  }
 
   // Belt
-  ctx.fillStyle = '#222';
-  ctx.fillRect(-9, 10 + by, 18, 3);
+  ctx.fillStyle = '#3a2a1a';
+  ctx.fillRect(-11, 8 + ty, 22, 3);
+  ctx.fillStyle = '#888';
+  ctx.fillRect(-2, 8 + ty, 4, 3);
 
-  // Arms
-  ctx.fillStyle = skin.body;
+  // ARMS - proportional human arms
+  // Left arm
   ctx.save();
-  ctx.translate(-10, -4 + by);
-  ctx.rotate((armSwing * Math.PI) / 180);
-  ctx.fillRect(-3, 0, 5, 14);
+  ctx.translate(-12, -8 + ty);
+  ctx.rotate(-armSwing - 0.1);
+  ctx.fillStyle = skin.shirtColor;
+  drawRoundedLimb(ctx, -3, 0, 7, 10);
+  ctx.fillStyle = skin.skinTone;
+  drawRoundedLimb(ctx, -2, 9, 5, 8);
   ctx.restore();
 
+  // Right arm (holding weapon)
   ctx.save();
-  ctx.translate(10, -4 + by);
-  ctx.rotate((-armSwing * Math.PI) / 180);
-  ctx.fillRect(-2, 0, 5, 14);
-  ctx.restore();
-
-  // Weapon in hand (gun shape)
-  ctx.save();
-  ctx.translate(12, 2 + by);
-  ctx.rotate((angle * 0.3) + (-armSwing * Math.PI) / 180);
+  ctx.translate(12, -8 + ty);
+  ctx.rotate(armSwing + 0.2);
+  ctx.fillStyle = skin.shirtColor;
+  drawRoundedLimb(ctx, -3, 0, 7, 10);
+  ctx.fillStyle = skin.skinTone;
+  drawRoundedLimb(ctx, -2, 9, 5, 6);
+  // Gun in hand
+  ctx.fillStyle = '#2a2a2a';
+  ctx.fillRect(0, 13, 12, 4);
   ctx.fillStyle = '#444';
-  ctx.fillRect(0, -2, 14, 4);
-  ctx.fillRect(2, 2, 3, 5);
+  ctx.fillRect(1, 11, 3, 5);
   ctx.restore();
 
-  // Head
-  ctx.fillStyle = skin.body;
+  // NECK
+  ctx.fillStyle = skin.skinTone;
+  drawRoundedLimb(ctx, -3, -16 + ty, 6, 5);
+
+  // HEAD - realistic proportions
+  ctx.fillStyle = skin.skinTone;
   ctx.beginPath();
-  ctx.arc(0, -16 + by, 10, 0, Math.PI * 2);
+  ctx.ellipse(0, -22 + ty, 9, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ears
+  ctx.beginPath();
+  ctx.ellipse(-9, -22 + ty, 2.5, 3.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(9, -22 + ty, 2.5, 3.5, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Hair
-  ctx.fillStyle = skin.hair;
-  if (skin.hairStyle === 'short') {
+  ctx.fillStyle = skin.hairColor;
+  if (skin.hairStyle === 'buzz') {
     ctx.beginPath();
-    ctx.arc(0, -19 + by, 10, Math.PI, 0);
+    ctx.ellipse(0, -25 + ty, 9, 7, 0, Math.PI, 0);
     ctx.fill();
+  } else if (skin.hairStyle === 'slick') {
+    ctx.beginPath();
+    ctx.ellipse(0, -26 + ty, 10, 8, 0, Math.PI * 1.1, -0.1);
+    ctx.fill();
+    ctx.fillRect(6, -28 + ty, 4, 6);
   } else if (skin.hairStyle === 'long') {
     ctx.beginPath();
-    ctx.arc(0, -19 + by, 10, Math.PI, 0);
+    ctx.ellipse(0, -25 + ty, 10, 8, 0, Math.PI, 0);
     ctx.fill();
-    ctx.fillRect(-10, -18 + by, 4, 14);
-    ctx.fillRect(6, -18 + by, 4, 14);
-  } else if (skin.hairStyle === 'mohawk') {
-    ctx.fillRect(-3, -30 + by, 6, 14);
+    ctx.fillRect(-10, -25 + ty, 4, 12);
+    ctx.fillRect(6, -25 + ty, 4, 12);
   }
 
-  // Eyes
+  // Face features
+  // Eyebrows
+  ctx.fillStyle = skin.hairColor;
+  ctx.fillRect(-6, -25 + ty, 4, 1.5);
+  ctx.fillRect(2, -25 + ty, 4, 1.5);
+
+  // Eyes - detailed
   ctx.fillStyle = '#fff';
-  ctx.fillRect(-5, -18 + by, 4, 3);
-  ctx.fillRect(1, -18 + by, 4, 3);
-  ctx.fillStyle = '#111';
-  ctx.fillRect(-4, -17 + by, 2, 2);
-  ctx.fillRect(2, -17 + by, 2, 2);
+  ctx.beginPath();
+  ctx.ellipse(-4, -22 + ty, 3, 2.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(4, -22 + ty, 3, 2.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Iris
+  ctx.fillStyle = '#3a2a1a';
+  ctx.beginPath();
+  ctx.arc(-4, -22 + ty, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(4, -22 + ty, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  // Pupils
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.arc(-4, -22 + ty, 0.8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(4, -22 + ty, 0.8, 0, Math.PI * 2);
+  ctx.fill();
 
-  // Accessory
-  if (skin.accessory === 'bandana') {
-    ctx.fillStyle = '#cc0000';
-    ctx.fillRect(-10, -20 + by, 20, 3);
-    ctx.fillRect(8, -19 + by, 6, 2);
-  } else if (skin.accessory === 'helmet') {
-    ctx.fillStyle = '#3a3a3a';
-    ctx.beginPath();
-    ctx.arc(0, -19 + by, 11, Math.PI, 0);
-    ctx.fill();
-    ctx.fillStyle = '#555';
-    ctx.fillRect(-11, -19 + by, 22, 3);
-  } else if (skin.accessory === 'goggles') {
-    ctx.fillStyle = '#ff6600';
-    ctx.fillRect(-7, -19 + by, 14, 4);
-    ctx.fillStyle = '#222';
-    ctx.fillRect(-6, -18 + by, 5, 3);
-    ctx.fillRect(1, -18 + by, 5, 3);
-  }
+  // Nose
+  ctx.fillStyle = darken(skin.skinTone, 15);
+  ctx.beginPath();
+  ctx.moveTo(-1.5, -20 + ty);
+  ctx.lineTo(0, -17 + ty);
+  ctx.lineTo(1.5, -20 + ty);
+  ctx.fill();
+
+  // Mouth
+  ctx.strokeStyle = darken(skin.skinTone, 30);
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(0, -15 + ty, 3, 0.1, Math.PI - 0.1);
+  ctx.stroke();
 
   ctx.restore();
 }
 
-export function drawZombie(
+export function drawZombieHuman(
   ctx: CanvasRenderingContext2D,
   x: number, y: number,
   type: 'walker' | 'runner' | 'tank' | 'explosive' | 'boss',
@@ -178,113 +223,191 @@ export function drawZombie(
   ctx.save();
   ctx.translate(x, y);
 
-  const scale = type === 'boss' ? 1.8 : type === 'tank' ? 1.4 : type === 'runner' ? 0.9 : 1;
-  ctx.scale(scale, scale);
+  const sc = type === 'boss' ? 1.7 : type === 'tank' ? 1.3 : type === 'runner' ? 0.95 : 1;
+  ctx.scale(sc, sc);
 
-  const swing = Math.sin(frame * 0.1) * 10;
-  const armReach = Math.sin(frame * 0.08) * 15 + 20;
+  const shamble = Math.sin(frame * 0.08) * 0.3;
+  const armReach = Math.sin(frame * 0.06) * 0.5 + 0.8;
+  const headTilt = Math.sin(frame * 0.04) * 0.1;
+
+  const skinG = type === 'explosive' ? '#7a8a3a' : type === 'boss' ? '#4a3050' : '#5a7a5a';
+  const clothG = type === 'explosive' ? '#5a3a1a' : type === 'boss' ? '#1a0a1a' : '#3a3a2a';
 
   // Shadow
   ctx.fillStyle = 'rgba(0,0,0,0.3)';
   ctx.beginPath();
-  ctx.ellipse(0, 28, 10 * scale, 4, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 30, 11, 4, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Zombie body colors
-  const skinColor = type === 'explosive' ? '#7a8a2a' : type === 'boss' ? '#4a2a4a' : '#5a7a5a';
-  const clothColor = type === 'explosive' ? '#8b4513' : type === 'boss' ? '#2a0a2a' : '#3a3a2a';
-  const bloodColor = '#5a0000';
-
-  // Legs (shambling)
-  ctx.fillStyle = clothColor;
+  // Legs shambling
   ctx.save();
-  ctx.translate(-4, 12);
-  ctx.rotate((swing * Math.PI) / 180);
-  ctx.fillRect(-3, 0, 6, 16);
-  ctx.restore();
-  ctx.save();
-  ctx.translate(4, 12);
-  ctx.rotate((-swing * Math.PI) / 180);
-  ctx.fillRect(-3, 0, 6, 16);
+  ctx.translate(-5, 10);
+  ctx.rotate(shamble);
+  ctx.fillStyle = clothG;
+  drawRoundedLimb(ctx, -3, 0, 7, 12);
+  ctx.fillStyle = darken(clothG, 10);
+  drawRoundedLimb(ctx, -2, 11, 6, 9);
+  // Torn pants detail
+  ctx.fillStyle = skinG;
+  ctx.fillRect(-1, 8, 4, 3);
   ctx.restore();
 
-  // Body (torn)
-  ctx.fillStyle = clothColor;
-  ctx.beginPath();
-  ctx.roundRect(-9, -8, 18, 22, 2);
-  ctx.fill();
-  // Blood stains
-  ctx.fillStyle = bloodColor;
-  ctx.fillRect(-6, -2, 4, 5);
-  ctx.fillRect(3, 2, 5, 4);
+  ctx.save();
+  ctx.translate(5, 10);
+  ctx.rotate(-shamble * 0.7);
+  ctx.fillStyle = clothG;
+  drawRoundedLimb(ctx, -3, 0, 7, 12);
+  ctx.fillStyle = darken(clothG, 10);
+  drawRoundedLimb(ctx, -2, 11, 6, 9);
+  ctx.restore();
 
-  // Arms (reaching forward)
-  ctx.fillStyle = skinColor;
+  // Torso torn
+  ctx.fillStyle = clothG;
+  drawRoundedLimb(ctx, -11, -12, 22, 24);
+  // Blood/rip marks
+  ctx.fillStyle = '#4a0000';
+  ctx.fillRect(-7, -5, 5, 6);
+  ctx.fillRect(3, -1, 4, 5);
+  ctx.fillStyle = skinG;
+  ctx.fillRect(-5, 0, 3, 4);
+
+  // Arms reaching forward
   ctx.save();
-  ctx.translate(-10, -4);
-  ctx.rotate((armReach * Math.PI) / 180);
-  ctx.fillRect(-3, 0, 5, 14);
+  ctx.translate(-12, -8);
+  ctx.rotate(-armReach);
+  ctx.fillStyle = skinG;
+  drawRoundedLimb(ctx, -3, 0, 7, 12);
+  drawRoundedLimb(ctx, -2, 11, 5, 8);
+  // Clawed fingers
+  ctx.fillStyle = darken(skinG, 30);
+  ctx.fillRect(-2, 18, 2, 4);
+  ctx.fillRect(0, 17, 2, 5);
+  ctx.fillRect(2, 18, 2, 4);
   ctx.restore();
+
   ctx.save();
-  ctx.translate(10, -4);
-  ctx.rotate((-armReach * Math.PI) / 180 - 0.3);
-  ctx.fillRect(-2, 0, 5, 14);
+  ctx.translate(12, -8);
+  ctx.rotate(armReach * 0.8);
+  ctx.fillStyle = skinG;
+  drawRoundedLimb(ctx, -3, 0, 7, 12);
+  drawRoundedLimb(ctx, -2, 11, 5, 8);
+  ctx.fillStyle = darken(skinG, 30);
+  ctx.fillRect(-2, 18, 2, 4);
+  ctx.fillRect(0, 17, 2, 5);
+  ctx.fillRect(2, 18, 2, 4);
   ctx.restore();
+
+  // Neck
+  ctx.fillStyle = skinG;
+  drawRoundedLimb(ctx, -3, -16, 6, 5);
 
   // Head
-  ctx.fillStyle = skinColor;
+  ctx.save();
+  ctx.rotate(headTilt);
+  ctx.fillStyle = skinG;
   ctx.beginPath();
-  ctx.arc(0, -16, 10, 0, Math.PI * 2);
+  ctx.ellipse(0, -22, 9, 10, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Zombie face
-  ctx.fillStyle = '#300';
-  ctx.fillRect(-6, -18, 4, 4); // eye socket
-  ctx.fillRect(2, -18, 4, 4);
-  ctx.fillStyle = '#ff0';
-  ctx.fillRect(-5, -17, 2, 2); // glowing eyes
-  ctx.fillRect(3, -17, 2, 2);
-  // Mouth
-  ctx.fillStyle = '#300';
-  ctx.fillRect(-4, -11, 8, 3);
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(-3, -11, 2, 2);
-  ctx.fillRect(1, -11, 2, 2);
-  ctx.fillRect(4, -11, 1, 2);
+  // Decayed face
+  ctx.fillStyle = darken(skinG, 20);
+  ctx.beginPath();
+  ctx.ellipse(3, -20, 4, 3, 0.2, 0, Math.PI * 2);
+  ctx.fill();
 
-  // Explosive glow
+  // Sunken glowing eyes
+  ctx.fillStyle = '#1a0a00';
+  ctx.beginPath();
+  ctx.ellipse(-4, -23, 3, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(4, -23, 3, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Glow
+  ctx.fillStyle = type === 'boss' ? '#ff00ff' : type === 'explosive' ? '#ffaa00' : '#aaff00';
+  ctx.beginPath();
+  ctx.arc(-4, -23, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(4, -23, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Mouth - gaping jaw
+  ctx.fillStyle = '#2a0000';
+  ctx.beginPath();
+  ctx.ellipse(0, -15, 4, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Teeth
+  ctx.fillStyle = '#ddd';
+  ctx.fillRect(-3, -16, 2, 2);
+  ctx.fillRect(1, -16, 2, 2);
+  ctx.fillRect(-1, -14, 2, 2);
+
+  // Missing hair / wound
+  ctx.fillStyle = darken(skinG, 25);
+  ctx.beginPath();
+  ctx.arc(-3, -29, 5, 0, Math.PI * 1.5);
+  ctx.fill();
+
+  ctx.restore();
+
+  // Explosive glow ring
   if (type === 'explosive') {
-    ctx.strokeStyle = `rgba(255, 100, 0, ${0.5 + Math.sin(frame * 0.2) * 0.3})`;
+    ctx.strokeStyle = `rgba(255, 150, 0, ${0.4 + Math.sin(frame * 0.15) * 0.3})`;
     ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
     ctx.beginPath();
-    ctx.arc(0, 0, 20, 0, Math.PI * 2);
+    ctx.arc(0, 0, 25, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.setLineDash([]);
   }
 
-  // Boss crown
+  // Boss crown of bone
   if (type === 'boss') {
-    ctx.fillStyle = '#aa0000';
-    ctx.beginPath();
-    ctx.moveTo(-8, -27);
-    ctx.lineTo(-6, -33);
-    ctx.lineTo(-2, -28);
-    ctx.lineTo(0, -35);
-    ctx.lineTo(2, -28);
-    ctx.lineTo(6, -33);
-    ctx.lineTo(8, -27);
-    ctx.closePath();
-    ctx.fill();
+    ctx.fillStyle = '#ddd';
+    const spikes = 5;
+    for (let i = 0; i < spikes; i++) {
+      const a = Math.PI + (i / (spikes - 1)) * Math.PI;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * 8, -30 + Math.sin(a) * 3);
+      ctx.lineTo(Math.cos(a) * 6, -37);
+      ctx.lineTo(Math.cos(a) * 10, -30 + Math.sin(a) * 3);
+      ctx.fill();
+    }
   }
 
   ctx.restore();
 
-  // Health bar (above character, outside scale transform)
+  // Health bar
   if (health < maxHealth) {
-    const barW = 30 * scale;
-    const barY = y - 35 * scale;
-    ctx.fillStyle = '#333';
-    ctx.fillRect(x - barW / 2, barY, barW, 4);
-    ctx.fillStyle = type === 'boss' ? '#ff00ff' : '#ff2d55';
-    ctx.fillRect(x - barW / 2, barY, barW * (health / maxHealth), 4);
+    const barW = 28 * sc;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(x - barW / 2 - 1, y - 38 * sc - 1, barW + 2, 6);
+    ctx.fillStyle = type === 'boss' ? '#cc00cc' : '#cc2222';
+    ctx.fillRect(x - barW / 2, y - 38 * sc, barW * (health / maxHealth), 4);
   }
+}
+
+function drawRoundedLimb(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  const r = Math.min(w, h) * 0.3;
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function darken(hex: string, amount: number): string {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const r = Math.max(0, ((num >> 16) & 0xff) - amount);
+  const g = Math.max(0, ((num >> 8) & 0xff) - amount);
+  const b = Math.max(0, (num & 0xff) - amount);
+  return `rgb(${r},${g},${b})`;
 }

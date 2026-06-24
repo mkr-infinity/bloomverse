@@ -1,5 +1,5 @@
 import { GameState, LevelDef } from './engine';
-import { CharacterSkin, drawCharacter, drawZombie } from './characters';
+import { CharacterSkin, drawHumanCharacter, drawZombieHuman } from './characters';
 
 export function render(ctx: CanvasRenderingContext2D, state: GameState, w: number, h: number, level: LevelDef, skin: CharacterSkin) {
   ctx.save();
@@ -43,7 +43,7 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, w: numbe
   // Enemies (draw far ones first)
   const sortedEnemies = [...state.enemies].sort((a, b) => a.y - b.y);
   for (const e of sortedEnemies) {
-    drawZombie(ctx, e.x, e.y, e.type, e.frame, e.health, e.maxHealth);
+    drawZombieHuman(ctx, e.x, e.y, e.type, e.frame, e.health, e.maxHealth);
   }
 
   // Bullets
@@ -64,7 +64,7 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, w: numbe
   ctx.shadowBlur = 0;
 
   // Player character
-  drawCharacter(ctx, state.playerX, state.playerY, skin, 1, state.playerAngle, state.frame, state.isMoving);
+  drawHumanCharacter(ctx, state.playerX, state.playerY, skin, 1, state.playerAngle, state.frame, state.isMoving);
 
   // Particles
   for (const p of state.particles) {
