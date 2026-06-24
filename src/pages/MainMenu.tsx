@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { loadData } from '../utils/db';
-import ParticleBackground from '../components/ParticleBackground';
+import ActionBackground from '../components/ActionBackground';
 import logoSvg from '../assets/logo.svg';
 import styles from './MainMenu.module.css';
 
@@ -16,14 +16,14 @@ export default function MainMenu() {
 
   useEffect(() => {
     loadData('gameState', 'progress').then((data) => setHasSave(!!data));
-    const timer = setTimeout(() => setIntroComplete(true), 1600);
+    const timer = setTimeout(() => setIntroComplete(true), 600);
     return () => clearTimeout(timer);
   }, []);
 
   const handleStart = useCallback(() => {
-    if (!introComplete) setIntroComplete(true);
+    setIntroComplete(true);
     setShowMenu(true);
-  }, [introComplete]);
+  }, []);
 
   const handleContinue = useCallback(async () => {
     await load();
@@ -37,8 +37,8 @@ export default function MainMenu() {
 
   return (
     <div className={styles.container} onClick={!showMenu ? handleStart : undefined}>
-      <ParticleBackground />
-      <div className={styles.vignette} />
+      <ActionBackground />
+      <div className={styles.grade} />
       <div className={styles.scanline} />
 
       {!showMenu ? (
@@ -49,22 +49,19 @@ export default function MainMenu() {
             <img src={logoSvg} alt="Bloomverse" className={styles.logo} />
           </div>
           <h1 className={styles.title}>
-            <span className={styles.titleChar}>B</span>
-            <span className={styles.titleChar}>L</span>
-            <span className={styles.titleChar}>O</span>
-            <span className={styles.titleChar}>O</span>
-            <span className={styles.titleChar}>M</span>
-            <span className={styles.titleChar}>V</span>
-            <span className={styles.titleChar}>E</span>
-            <span className={styles.titleChar}>R</span>
-            <span className={styles.titleChar}>S</span>
-            <span className={styles.titleChar}>E</span>
+            {'BLOOMVERSE'.split('').map((c, i) => (
+              <span key={i} className={styles.titleChar}>{c}</span>
+            ))}
           </h1>
-          <p className={styles.tagline}>Survive. Fight. Escape.</p>
+          <p className={styles.tagline}>SURVIVE &middot; FIGHT &middot; ESCAPE</p>
+
           <div className={styles.pressStart}>
-            <span className={styles.pressText}>TAP ANYWHERE TO START</span>
-            <div className={styles.pressLine} />
+            <div className={styles.tapBtn}>
+              <span className={styles.tapPulse} />
+              <span className={styles.pressText}>TAP ANYWHERE TO START</span>
+            </div>
           </div>
+          <p className={styles.studio}>MKR INFINITY PRESENTS</p>
         </div>
       ) : (
         <div className={styles.menu}>
@@ -72,7 +69,7 @@ export default function MainMenu() {
             <img src={logoSvg} alt="Bloomverse" className={styles.menuLogo} />
             <div>
               <h1 className={styles.menuTitle}>BLOOMVERSE</h1>
-              <p className={styles.menuSub}>Survive. Fight. Escape.</p>
+              <p className={styles.menuSub}>SURVIVE &middot; FIGHT &middot; ESCAPE</p>
             </div>
           </div>
           <nav className={styles.nav}>
