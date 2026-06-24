@@ -12,82 +12,60 @@ export default function LevelMap() {
 
   useEffect(() => { load(); }, [load]);
 
-  const handleLevel = (id: number) => {
-    if (id <= maxLevel) navigate(`/game/${id}`);
-  };
-
-  const worldNames: Record<string, string> = {
-    city: 'ABANDONED CITY', desert: 'DESERT RUINS', frozen: 'FROZEN ZONE',
-    burning: 'BURNING COLLAPSE', sky: 'SKY FRAGMENTS', void: 'DARK VOID',
-  };
-
-  const worldColors: Record<string, string> = {
-    city: '#4488cc', desert: '#cc8833', frozen: '#55bbee',
-    burning: '#ff4422', sky: '#8855ff', void: '#ff22aa',
-  };
-
-  // Group levels by world
-  let lastWorld = '';
+  const play = (id: number) => { if (id <= maxLevel) navigate(`/game/${id}`); };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.world}>
+      {/* Scenic background layers */}
+      <div className={styles.skyLayer} />
+      <div className={styles.mountainLayer} />
+      <div className={styles.cityLayer} />
+      <div className={styles.fogLayer} />
+
+      {/* Header */}
       <div className={styles.header}>
-        <button className={styles.back} onClick={() => navigate('/')}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
-          </svg>
+        <button className={styles.backBtn} onClick={() => navigate('/')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         </button>
-        <h1 className={styles.title}>MISSIONS</h1>
-        <div className={styles.progress}>
-          <span className={styles.progressText}>{maxLevel - 1}/{LEVELS.length}</span>
+        <div className={styles.headerCenter}>
+          <h1 className={styles.headerTitle}>THE MULTIVERSE</h1>
+          <p className={styles.headerSub}>Choose your mission</p>
         </div>
+        <div className={styles.headerBadge}>{maxLevel - 1}/{LEVELS.length}</div>
       </div>
 
-      <div className={styles.mapScroll}>
-        <div className={styles.pathContainer}>
+      {/* Level path */}
+      <div className={styles.scroll}>
+        <div className={styles.pathWrap}>
+          {/* Decorative path line */}
+          <svg className={styles.pathSvg} viewBox="0 0 360 1500" preserveAspectRatio="none">
+            <path d="M180 20 C100 100 260 180 180 260 C100 340 260 420 180 500 C100 580 260 660 180 740 C100 820 260 900 180 980 C100 1060 260 1140 180 1220 C100 1300 260 1380 180 1460" fill="none" stroke="rgba(255,200,100,0.15)" strokeWidth="4" strokeDasharray="8 6"/>
+          </svg>
+
           {LEVELS.map((level, i) => {
             const unlocked = level.id <= maxLevel;
-            const completed = level.id < maxLevel;
+            const done = level.id < maxLevel;
             const current = level.id === maxLevel;
-            const color = worldColors[level.world];
-            const showWorldLabel = level.world !== lastWorld;
-            lastWorld = level.world;
-            const isLeft = Math.floor(i / 2) % 2 === 0;
-            const offset = isLeft ? (i % 2 === 0 ? '15%' : '45%') : (i % 2 === 0 ? '55%' : '25%');
+            const xPos = 50 + Math.sin(i * 0.55) * 25;
 
             return (
-              <div key={level.id}>
-                {showWorldLabel && (
-                  <div className={styles.worldBanner} style={{ borderColor: color }}>
-                    <span style={{ color }}>{worldNames[level.world]}</span>
-                  </div>
-                )}
-                <div className={styles.nodeWrapper} style={{ marginLeft: offset }}>
-                  {i > 0 && (
-                    <div className={styles.pathLine} style={{
-                      background: completed ? color : '#2a2a3a'
-                    }} />
+              <div key={level.id} className={styles.nodeWrap} style={{ left: `${xPos}%` }}>
+                <button
+                  className={`${styles.node} ${done ? styles.done : ''} ${current ? styles.current : ''} ${!unlocked ? styles.locked : ''}`}
+                  onClick={() => play(level.id)}
+                  disabled={!unlocked}
+                >
+                  {done ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
+                  ) : (
+                    <span className={styles.nodeNum}>{level.id}</span>
                   )}
-                  <button
-                    className={`${styles.node} ${completed ? styles.completed : ''} ${current ? styles.current : ''} ${!unlocked ? styles.locked : ''}`}
-                    style={{ '--c': color } as React.CSSProperties}
-                    onClick={() => handleLevel(level.id)}
-                    disabled={!unlocked}
-                  >
-                    {completed && <div className={styles.checkmark}>&#10003;</div>}
-                    {current && <div className={styles.currentPulse} />}
-                    <span className={styles.nodeId}>{level.id}</span>
-                  </button>
-                  <span className={styles.nodeName} style={{ color: unlocked ? '#ccc' : '#555' }}>
-                    {level.name}
-                  </span>
-                </div>
+                </button>
+                {current && <div className={styles.currentGlow} />}
+                <span className={`${styles.nodeName} ${unlocked ? styles.nameVisible : ''}`}>{level.name}</span>
               </div>
             );
           })}
-          <div className={styles.endBadge}>
-            <span>THE VOID AWAITS</span>
-          </div>
         </div>
       </div>
     </div>
