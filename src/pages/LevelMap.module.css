@@ -53,6 +53,28 @@
   margin-top: 2px;
 }
 
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coinBalance {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: #ffd700;
+  background: rgba(255, 200, 0, 0.1);
+  border: 1px solid rgba(255, 200, 0, 0.3);
+  padding: 6px 11px;
+  border-radius: 20px;
+}
+
+.coinDot { color: #ffd700; font-size: 11px; text-shadow: 0 0 8px rgba(255,200,0,0.8); }
+.coinDotSm { color: #ffd700; font-size: 9px; }
+
 .headerBadge {
   font-family: var(--font-display);
   font-size: 12px;
@@ -393,6 +415,67 @@
 }
 
 .nameVisible { color: #fff; }
+
+.nodeTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.diffTag {
+  font-family: var(--font-display);
+  font-size: 7px;
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  color: #0a0a0f;
+  font-weight: 700;
+}
+
+.diff_EASY { background: #4fd16b; }
+.diff_NORMAL { background: #4fc3f7; }
+.diff_HARD { background: #ffb74d; }
+.diff_BRUTAL { background: #ff6b6b; color: #fff; }
+.diff_BOSS { background: linear-gradient(135deg, #ff2d55, #b1004a); color: #fff; }
+
+.nodeMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 3px;
+}
+
+.metaEnemies {
+  font-size: 9px;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.5px;
+}
+
+.metaReward {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-display);
+  font-size: 9px;
+  color: #ffd700;
+}
+
+.boss {
+  border-color: #ff2d55;
+}
+
+.boss.current { border-color: #ffd700; }
+
+.bossStar {
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  font-size: 14px;
+  color: #ff2d55;
+  text-shadow: 0 0 8px rgba(255, 45, 85, 0.8);
+}
 
 .endNote {
   text-align: center;

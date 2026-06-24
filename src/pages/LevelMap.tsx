@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { getLevel, BASE_LEVEL_COUNT } from '../game/engine';
+import { getLevel, getLevelInfo, BASE_LEVEL_COUNT } from '../game/engine';
 import styles from './LevelMap.module.css';
 
 const WORLD_LABEL: Record<string, string> = {
@@ -56,7 +56,10 @@ export default function LevelMap() {
           <h1 className={styles.headerTitle}>THE MULTIVERSE</h1>
           <p className={styles.headerSub}>Endless mission map</p>
         </div>
-        <div className={styles.headerBadge}>LV {maxLevel}</div>
+        <div className={styles.headerRight}>
+          <div className={styles.coinBalance}><span className={styles.coinDot}>&#9679;</span>{progress.coins || 0}</div>
+          <div className={styles.headerBadge}>LV {maxLevel}</div>
+        </div>
       </div>
 
       {/* Scrollable themed journey */}
@@ -77,11 +80,12 @@ export default function LevelMap() {
                 const unlocked = lvl.id <= maxLevel;
                 const done = lvl.id < maxLevel;
                 const current = lvl.id === maxLevel;
+                const info = getLevelInfo(lvl.id);
                 return (
                   <div key={lvl.id} className={styles.nodeWrap}>
                     <div className={styles.connector} />
                     <button
-                      className={`${styles.node} ${done ? styles.done : ''} ${current ? styles.current : ''} ${!unlocked ? styles.locked : ''}`}
+                      className={`${styles.node} ${done ? styles.done : ''} ${current ? styles.current : ''} ${!unlocked ? styles.locked : ''} ${info.hasBoss ? styles.boss : ''}`}
                       onClick={() => play(lvl.id)}
                       disabled={!unlocked}
                     >
@@ -93,10 +97,18 @@ export default function LevelMap() {
                         <span className={styles.nodeNum}>{lvl.id}</span>
                       )}
                       {current && <span className={styles.pingRing} />}
+                      {info.hasBoss && unlocked && <span className={styles.bossStar}>&#9733;</span>}
                     </button>
                     <div className={styles.nodeInfo}>
-                      <span className={styles.nodeLvl}>LEVEL {lvl.id}</span>
+                      <div className={styles.nodeTopRow}>
+                        <span className={styles.nodeLvl}>LEVEL {lvl.id}</span>
+                        <span className={`${styles.diffTag} ${styles['diff_' + info.difficulty]}`}>{info.difficulty}</span>
+                      </div>
                       <span className={`${styles.nodeName} ${unlocked ? styles.nameVisible : ''}`}>{lvl.name}</span>
+                      <div className={styles.nodeMeta}>
+                        <span className={styles.metaEnemies}>{info.enemyCount} hostiles</span>
+                        <span className={styles.metaReward}><span className={styles.coinDotSm}>&#9679;</span>{info.reward}</span>
+                      </div>
                     </div>
                   </div>
                 );

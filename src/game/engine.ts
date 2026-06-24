@@ -158,6 +158,29 @@ export function getLevel(id: number): LevelDef {
   };
 }
 
+export interface LevelInfo {
+  hasBoss: boolean;
+  enemyCount: number;
+  waves: number;
+  reward: number; // base coin reward for clearing
+  difficulty: 'EASY' | 'NORMAL' | 'HARD' | 'BRUTAL' | 'BOSS';
+}
+
+export function getLevelInfo(id: number): LevelInfo {
+  const lvl = getLevel(id);
+  const all = lvl.waves.flat();
+  const enemyCount = all.reduce((s, e) => s + e.count, 0);
+  const hasBoss = all.some((e) => e.type === 'boss');
+  const reward = id * 40 + enemyCount * 4;
+  let difficulty: LevelInfo['difficulty'];
+  if (hasBoss) difficulty = 'BOSS';
+  else if (id <= 2) difficulty = 'EASY';
+  else if (id <= 6) difficulty = 'NORMAL';
+  else if (id <= 12) difficulty = 'HARD';
+  else difficulty = 'BRUTAL';
+  return { hasBoss, enemyCount, waves: lvl.waves.length, reward, difficulty };
+}
+
 const ENEMY_STATS: Record<Enemy['type'], { health: number; speed: number; damage: number }> = {
   walker: { health: 40, speed: 0.8, damage: 8 },
   runner: { health: 25, speed: 2.0, damage: 12 },
