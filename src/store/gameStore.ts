@@ -37,6 +37,7 @@ export interface GameProgress {
   firstPlayDate: number;
   achievements: string[];
   unlockedWeapons: string[];
+  selectedCharacter: string;
 }
 
 interface GameState {
@@ -87,6 +88,7 @@ const defaultProgress: GameProgress = {
   firstPlayDate: 0,
   achievements: [],
   unlockedWeapons: ['pistol', 'rifle'],
+  selectedCharacter: 'ghost',
 };
 
 export const useGameStore = create<GameState>((set, get) => ({

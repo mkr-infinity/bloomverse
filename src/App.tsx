@@ -3,6 +3,8 @@ import { HashRouter, Routes, Route } from 'react-router-dom';
 import LoadingScreen from './components/LoadingScreen';
 
 const MainMenu = lazy(() => import('./pages/MainMenu'));
+const CharacterSelect = lazy(() => import('./pages/CharacterSelect'));
+const LevelMap = lazy(() => import('./pages/LevelMap'));
 const Game = lazy(() => import('./pages/Game'));
 const Settings = lazy(() => import('./pages/Settings'));
 const About = lazy(() => import('./pages/About'));
@@ -15,7 +17,9 @@ export default function App() {
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/" element={<MainMenu />} />
-          <Route path="/game" element={<Game />} />
+          <Route path="/character" element={<CharacterSelect />} />
+          <Route path="/levels" element={<LevelMap />} />
+          <Route path="/game/:levelId" element={<Game />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/about" element={<About />} />
           <Route path="/support" element={<Support />} />

@@ -12,28 +12,26 @@ export default function MainMenu() {
   const [hasSave, setHasSave] = useState(false);
   const [introComplete, setIntroComplete] = useState(false);
   const load = useGameStore((s) => s.load);
-  const reset = useGameStore((s) => s.reset);
 
   useEffect(() => {
-    loadData('gameState', 'player').then((data) => setHasSave(!!data));
-    const timer = setTimeout(() => setIntroComplete(true), 2000);
+    loadData('gameState', 'progress').then((data) => setHasSave(!!data));
+    const timer = setTimeout(() => setIntroComplete(true), 1800);
     return () => clearTimeout(timer);
   }, []);
 
   const handleStart = useCallback(() => {
-    if (!introComplete) { setIntroComplete(true); }
+    if (!introComplete) setIntroComplete(true);
     setShowMenu(true);
   }, [introComplete]);
 
   const handleContinue = useCallback(async () => {
     await load();
-    navigate('/game');
+    navigate('/levels');
   }, [load, navigate]);
 
   const handleNewGame = useCallback(() => {
-    reset();
-    navigate('/game');
-  }, [reset, navigate]);
+    navigate('/character');
+  }, [navigate]);
 
   return (
     <div className={styles.container} onClick={!showMenu ? handleStart : undefined}>
@@ -45,7 +43,7 @@ export default function MainMenu() {
           <img src={logoSvg} alt="Bloomverse" className={styles.logo} />
           <h1 className={styles.title}>BLOOMVERSE</h1>
           <p className={styles.tagline}>Survive. Fight. Escape.</p>
-          <p className={styles.pressStart}>PRESS ANYWHERE TO START</p>
+          <p className={styles.pressStart}>TAP ANYWHERE TO START</p>
         </div>
       ) : (
         <div className={styles.menu}>
@@ -54,29 +52,23 @@ export default function MainMenu() {
           <nav className={styles.nav}>
             {hasSave && (
               <button className={styles.menuBtn} onClick={handleContinue}>
-                <span className={styles.btnIcon}>&#9654;</span>
-                CONTINUE
+                <span className={styles.btnIcon}>&#9654;</span> CONTINUE
               </button>
             )}
             <button className={styles.menuBtn} onClick={handleNewGame}>
-              <span className={styles.btnIcon}>&#9733;</span>
-              NEW GAME
+              <span className={styles.btnIcon}>&#9733;</span> NEW GAME
             </button>
             <button className={styles.menuBtn} onClick={() => navigate('/archive')}>
-              <span className={styles.btnIcon}>&#9783;</span>
-              ARCHIVE
+              <span className={styles.btnIcon}>&#9783;</span> ARCHIVE
             </button>
             <button className={styles.menuBtn} onClick={() => navigate('/settings')}>
-              <span className={styles.btnIcon}>&#9881;</span>
-              SETTINGS
+              <span className={styles.btnIcon}>&#9881;</span> SETTINGS
             </button>
             <button className={styles.menuBtn} onClick={() => navigate('/about')}>
-              <span className={styles.btnIcon}>&#9432;</span>
-              ABOUT
+              <span className={styles.btnIcon}>&#9432;</span> ABOUT
             </button>
             <button className={styles.menuBtn} onClick={() => navigate('/support')}>
-              <span className={styles.btnIcon}>&#9829;</span>
-              SUPPORT
+              <span className={styles.btnIcon}>&#9829;</span> SUPPORT
             </button>
           </nav>
         </div>
