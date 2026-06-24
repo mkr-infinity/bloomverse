@@ -43,8 +43,23 @@ export default function MainMenu() {
 
       {!showMenu ? (
         <div className={`${styles.intro} ${introComplete ? styles.visible : ''}`}>
-          <img src={logoSvg} alt="Bloomverse" className={styles.logo} />
-          <h1 className={styles.title}>BLOOMVERSE</h1>
+          <div className={styles.logoWrap}>
+            <div className={styles.logoRing} />
+            <div className={styles.logoRing2} />
+            <img src={logoSvg} alt="Bloomverse" className={styles.logo} />
+          </div>
+          <h1 className={styles.title}>
+            <span className={styles.titleChar}>B</span>
+            <span className={styles.titleChar}>L</span>
+            <span className={styles.titleChar}>O</span>
+            <span className={styles.titleChar}>O</span>
+            <span className={styles.titleChar}>M</span>
+            <span className={styles.titleChar}>V</span>
+            <span className={styles.titleChar}>E</span>
+            <span className={styles.titleChar}>R</span>
+            <span className={styles.titleChar}>S</span>
+            <span className={styles.titleChar}>E</span>
+          </h1>
           <p className={styles.tagline}>Survive. Fight. Escape.</p>
           <div className={styles.pressStart}>
             <span className={styles.pressText}>TAP ANYWHERE TO START</span>
