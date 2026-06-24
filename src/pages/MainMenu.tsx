@@ -12,10 +12,11 @@ export default function MainMenu() {
   const [hasSave, setHasSave] = useState(false);
   const [introComplete, setIntroComplete] = useState(false);
   const load = useGameStore((s) => s.load);
+  const reset = useGameStore((s) => s.reset);
 
   useEffect(() => {
     loadData('gameState', 'progress').then((data) => setHasSave(!!data));
-    const timer = setTimeout(() => setIntroComplete(true), 1800);
+    const timer = setTimeout(() => setIntroComplete(true), 1600);
     return () => clearTimeout(timer);
   }, []);
 
@@ -30,47 +31,83 @@ export default function MainMenu() {
   }, [load, navigate]);
 
   const handleNewGame = useCallback(() => {
+    reset();
     navigate('/character');
-  }, [navigate]);
+  }, [reset, navigate]);
 
   return (
     <div className={styles.container} onClick={!showMenu ? handleStart : undefined}>
       <ParticleBackground />
-      <div className={styles.overlay} />
+      <div className={styles.vignette} />
+      <div className={styles.scanline} />
 
       {!showMenu ? (
         <div className={`${styles.intro} ${introComplete ? styles.visible : ''}`}>
           <img src={logoSvg} alt="Bloomverse" className={styles.logo} />
           <h1 className={styles.title}>BLOOMVERSE</h1>
           <p className={styles.tagline}>Survive. Fight. Escape.</p>
-          <p className={styles.pressStart}>TAP ANYWHERE TO START</p>
+          <div className={styles.pressStart}>
+            <span className={styles.pressText}>TAP ANYWHERE TO START</span>
+            <div className={styles.pressLine} />
+          </div>
         </div>
       ) : (
         <div className={styles.menu}>
-          <img src={logoSvg} alt="Bloomverse" className={styles.menuLogo} />
-          <h1 className={styles.menuTitle}>BLOOMVERSE</h1>
+          <div className={styles.menuHeader}>
+            <img src={logoSvg} alt="Bloomverse" className={styles.menuLogo} />
+            <div>
+              <h1 className={styles.menuTitle}>BLOOMVERSE</h1>
+              <p className={styles.menuSub}>Survive. Fight. Escape.</p>
+            </div>
+          </div>
           <nav className={styles.nav}>
             {hasSave && (
-              <button className={styles.menuBtn} onClick={handleContinue}>
-                <span className={styles.btnIcon}>&#9654;</span> CONTINUE
+              <button className={`${styles.menuBtn} ${styles.continueBtn}`} onClick={handleContinue}>
+                <div className={styles.btnLeft}>
+                  <span className={styles.btnIcon}>&#9654;</span>
+                  <span className={styles.btnText}>CONTINUE</span>
+                </div>
+                <span className={styles.btnArrow}>&#8250;</span>
               </button>
             )}
-            <button className={styles.menuBtn} onClick={handleNewGame}>
-              <span className={styles.btnIcon}>&#9733;</span> NEW GAME
+            <button className={`${styles.menuBtn} ${styles.newGameBtn}`} onClick={handleNewGame}>
+              <div className={styles.btnLeft}>
+                <span className={styles.btnIcon}>&#9733;</span>
+                <span className={styles.btnText}>NEW GAME</span>
+              </div>
+              <span className={styles.btnArrow}>&#8250;</span>
             </button>
+            <div className={styles.divider} />
             <button className={styles.menuBtn} onClick={() => navigate('/archive')}>
-              <span className={styles.btnIcon}>&#9783;</span> ARCHIVE
+              <div className={styles.btnLeft}>
+                <span className={styles.btnIcon}>&#9783;</span>
+                <span className={styles.btnText}>ARCHIVE</span>
+              </div>
+              <span className={styles.btnArrow}>&#8250;</span>
             </button>
             <button className={styles.menuBtn} onClick={() => navigate('/settings')}>
-              <span className={styles.btnIcon}>&#9881;</span> SETTINGS
+              <div className={styles.btnLeft}>
+                <span className={styles.btnIcon}>&#9881;</span>
+                <span className={styles.btnText}>SETTINGS</span>
+              </div>
+              <span className={styles.btnArrow}>&#8250;</span>
             </button>
             <button className={styles.menuBtn} onClick={() => navigate('/about')}>
-              <span className={styles.btnIcon}>&#9432;</span> ABOUT
+              <div className={styles.btnLeft}>
+                <span className={styles.btnIcon}>&#9432;</span>
+                <span className={styles.btnText}>ABOUT</span>
+              </div>
+              <span className={styles.btnArrow}>&#8250;</span>
             </button>
             <button className={styles.menuBtn} onClick={() => navigate('/support')}>
-              <span className={styles.btnIcon}>&#9829;</span> SUPPORT
+              <div className={styles.btnLeft}>
+                <span className={styles.btnIcon}>&#9829;</span>
+                <span className={styles.btnText}>SUPPORT</span>
+              </div>
+              <span className={styles.btnArrow}>&#8250;</span>
             </button>
           </nav>
+          <p className={styles.version}>v1.0.0</p>
         </div>
       )}
     </div>

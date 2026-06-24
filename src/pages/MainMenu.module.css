@@ -10,21 +10,29 @@
   overflow: hidden;
 }
 
-.overlay {
+.vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.8) 100%);
+  background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.85) 100%);
   pointer-events: none;
 }
 
+.scanline {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+  pointer-events: none;
+}
+
+/* INTRO */
 .intro {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   opacity: 0;
-  transform: scale(0.9);
-  transition: all 1s ease;
+  transform: scale(0.92);
+  transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 2;
 }
 
@@ -34,112 +42,185 @@
 }
 
 .logo {
-  width: 140px;
-  height: 140px;
-  filter: drop-shadow(0 0 30px rgba(255, 45, 85, 0.6));
-  animation: float 3s ease-in-out infinite;
+  width: 130px;
+  height: 130px;
+  filter: drop-shadow(0 0 30px rgba(255, 45, 85, 0.5));
+  animation: float 4s ease-in-out infinite;
 }
 
 .title {
   font-family: var(--font-display);
-  font-size: 48px;
+  font-size: 44px;
   font-weight: 900;
   letter-spacing: 8px;
   background: linear-gradient(135deg, #ff2d55, #ff6b2d, #ffaa00);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: none;
 }
 
 .tagline {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 12px;
   letter-spacing: 6px;
   color: var(--text-secondary);
 }
 
 .pressStart {
-  font-family: var(--font-display);
-  font-size: 12px;
-  letter-spacing: 4px;
-  color: var(--accent-green);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   margin-top: 40px;
-  animation: pulse 2s ease-in-out infinite;
 }
 
+.pressText {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--accent-green);
+  animation: pulse 2.5s ease-in-out infinite;
+}
+
+.pressLine {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-green), transparent);
+  animation: pulse 2.5s ease-in-out infinite;
+}
+
+/* MENU */
 .menu {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
   z-index: 2;
-  animation: fadeIn 0.6s ease;
+  animation: fadeSlideUp 0.5s ease;
+}
+
+.menuHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .menuLogo {
-  width: 80px;
-  height: 80px;
-  filter: drop-shadow(0 0 20px rgba(255, 45, 85, 0.5));
+  width: 50px;
+  height: 50px;
+  filter: drop-shadow(0 0 12px rgba(255, 45, 85, 0.4));
 }
 
 .menuTitle {
   font-family: var(--font-display);
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 900;
-  letter-spacing: 6px;
+  letter-spacing: 5px;
   background: linear-gradient(135deg, #ff2d55, #ff6b2d);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
+.menuSub {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--text-secondary);
+}
+
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 12px;
-  width: 260px;
+  gap: 6px;
+  width: 280px;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.04);
+  margin: 4px 0;
 }
 
 .menuBtn {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 24px;
-  font-family: var(--font-display);
-  font-size: 14px;
-  letter-spacing: 3px;
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
+  justify-content: space-between;
+  padding: 13px 18px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
   transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .menuBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateX(3px);
+}
+
+.continueBtn {
+  background: rgba(0, 200, 100, 0.06);
+  border-color: rgba(0, 200, 100, 0.2);
+}
+
+.continueBtn:hover {
+  background: rgba(0, 200, 100, 0.1);
+  border-color: rgba(0, 200, 100, 0.4);
+}
+
+.newGameBtn {
+  background: rgba(255, 45, 85, 0.05);
+  border-color: rgba(255, 45, 85, 0.15);
+}
+
+.newGameBtn:hover {
   background: rgba(255, 45, 85, 0.1);
-  border-color: rgba(255, 45, 85, 0.4);
-  transform: translateX(4px);
-  box-shadow: 0 0 20px rgba(255, 45, 85, 0.2);
+  border-color: rgba(255, 45, 85, 0.3);
+}
+
+.btnLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .btnIcon {
-  font-size: 16px;
+  font-size: 14px;
   color: var(--accent-red);
-  width: 20px;
+  width: 18px;
   text-align: center;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+.continueBtn .btnIcon { color: var(--accent-green); }
+
+.btnText {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: var(--text-primary);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.btnArrow {
+  font-size: 18px;
+  color: #444;
+  transition: color 0.2s;
+}
+
+.menuBtn:hover .btnArrow { color: var(--text-primary); }
+
+.version {
+  font-size: 10px;
+  color: #333;
+  margin-top: 8px;
+  letter-spacing: 2px;
+}
+
+/* ANIMATIONS */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
 
 @keyframes pulse {
@@ -147,9 +228,15 @@
   50% { opacity: 0.3; }
 }
 
-@media (max-width: 600px) {
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 500px) {
   .title { font-size: 28px; letter-spacing: 4px; }
-  .logo { width: 100px; height: 100px; }
-  .nav { width: 220px; }
-  .menuBtn { padding: 12px 18px; font-size: 12px; }
+  .logo { width: 90px; height: 90px; }
+  .nav { width: 240px; }
+  .menuBtn { padding: 11px 14px; }
+  .btnText { font-size: 11px; }
 }
