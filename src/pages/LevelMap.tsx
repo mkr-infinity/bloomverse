@@ -1,74 +1,93 @@
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { LEVELS } from '../game/engine';
 import styles from './LevelMap.module.css';
 
-const WORLD_COLORS: Record<string, { bg: string; node: string; glow: string }> = {
-  city: { bg: '#1a2332', node: '#4488cc', glow: '#4488cc' },
-  desert: { bg: '#2d2210', node: '#cc8833', glow: '#ff9944' },
-  frozen: { bg: '#152535', node: '#55bbee', glow: '#88ddff' },
-  burning: { bg: '#2d1510', node: '#ff4422', glow: '#ff6644' },
-  sky: { bg: '#15152d', node: '#8855ff', glow: '#aa77ff' },
-  void: { bg: '#0a0a15', node: '#ff22aa', glow: '#ff44cc' },
-};
-
 export default function LevelMap() {
   const navigate = useNavigate();
   const progress = useGameStore((s) => s.progress);
+  const load = useGameStore((s) => s.load);
   const maxLevel = progress.maxLevelReached;
 
+  useEffect(() => { load(); }, [load]);
+
   const handleLevel = (id: number) => {
-    if (id <= maxLevel) {
-      navigate(`/game/${id}`);
-    }
+    if (id <= maxLevel) navigate(`/game/${id}`);
   };
+
+  const worldNames: Record<string, string> = {
+    city: 'ABANDONED CITY', desert: 'DESERT RUINS', frozen: 'FROZEN ZONE',
+    burning: 'BURNING COLLAPSE', sky: 'SKY FRAGMENTS', void: 'DARK VOID',
+  };
+
+  const worldColors: Record<string, string> = {
+    city: '#4488cc', desert: '#cc8833', frozen: '#55bbee',
+    burning: '#ff4422', sky: '#8855ff', void: '#ff22aa',
+  };
+
+  // Group levels by world
+  let lastWorld = '';
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <button className={styles.back} onClick={() => navigate('/')}>BACK</button>
-        <h1 className={styles.title}>SELECT MISSION</h1>
+        <button className={styles.back} onClick={() => navigate('/')}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <h1 className={styles.title}>MISSIONS</h1>
+        <div className={styles.progress}>
+          <span className={styles.progressText}>{maxLevel - 1}/{LEVELS.length}</span>
+        </div>
       </div>
 
       <div className={styles.mapScroll}>
-        <div className={styles.path}>
+        <div className={styles.pathContainer}>
           {LEVELS.map((level, i) => {
             const unlocked = level.id <= maxLevel;
+            const completed = level.id < maxLevel;
             const current = level.id === maxLevel;
-            const colors = WORLD_COLORS[level.world];
-            const isLeft = i % 2 === 0;
+            const color = worldColors[level.world];
+            const showWorldLabel = level.world !== lastWorld;
+            lastWorld = level.world;
+            const isLeft = Math.floor(i / 2) % 2 === 0;
+            const offset = isLeft ? (i % 2 === 0 ? '15%' : '45%') : (i % 2 === 0 ? '55%' : '25%');
 
             return (
-              <div key={level.id} className={styles.nodeRow} style={{ justifyContent: isLeft ? 'flex-start' : 'flex-end' }}>
-                {i > 0 && (
-                  <svg className={styles.connector} viewBox="0 0 200 60" preserveAspectRatio="none">
-                    <path
-                      d={isLeft ? 'M 160 0 Q 100 30 40 60' : 'M 40 0 Q 100 30 160 60'}
-                      fill="none"
-                      stroke={unlocked ? colors.node : '#333'}
-                      strokeWidth="3"
-                      strokeDasharray={unlocked ? 'none' : '6 4'}
-                      opacity={unlocked ? 0.6 : 0.3}
-                    />
-                  </svg>
+              <div key={level.id}>
+                {showWorldLabel && (
+                  <div className={styles.worldBanner} style={{ borderColor: color }}>
+                    <span style={{ color }}>{worldNames[level.world]}</span>
+                  </div>
                 )}
-                <button
-                  className={`${styles.node} ${unlocked ? styles.unlocked : styles.locked} ${current ? styles.current : ''}`}
-                  style={{
-                    '--node-color': colors.node,
-                    '--node-glow': colors.glow,
-                  } as React.CSSProperties}
-                  onClick={() => handleLevel(level.id)}
-                  disabled={!unlocked}
-                >
-                  <span className={styles.nodeNum}>{level.id}</span>
-                  <span className={styles.nodeName}>{level.name}</span>
-                  {!unlocked && <span className={styles.lock}>&#128274;</span>}
-                  {current && <span className={styles.currentBadge}>NEXT</span>}
-                </button>
+                <div className={styles.nodeWrapper} style={{ marginLeft: offset }}>
+                  {i > 0 && (
+                    <div className={styles.pathLine} style={{
+                      background: completed ? color : '#2a2a3a'
+                    }} />
+                  )}
+                  <button
+                    className={`${styles.node} ${completed ? styles.completed : ''} ${current ? styles.current : ''} ${!unlocked ? styles.locked : ''}`}
+                    style={{ '--c': color } as React.CSSProperties}
+                    onClick={() => handleLevel(level.id)}
+                    disabled={!unlocked}
+                  >
+                    {completed && <div className={styles.checkmark}>&#10003;</div>}
+                    {current && <div className={styles.currentPulse} />}
+                    <span className={styles.nodeId}>{level.id}</span>
+                  </button>
+                  <span className={styles.nodeName} style={{ color: unlocked ? '#ccc' : '#555' }}>
+                    {level.name}
+                  </span>
+                </div>
               </div>
             );
           })}
+          <div className={styles.endBadge}>
+            <span>THE VOID AWAITS</span>
+          </div>
         </div>
       </div>
     </div>
