@@ -5,6 +5,7 @@ import { LEVELS, createGameState, tick, GameState } from '../game/engine';
 import { render } from '../game/renderer';
 import { createInput } from '../game/input';
 import { CHARACTERS } from '../game/characters';
+import Tutorial from '../components/Tutorial';
 import styles from './Game.module.css';
 
 export default function Game() {
@@ -18,6 +19,9 @@ export default function Game() {
   const [overlay, setOverlay] = useState<'none' | 'pause' | 'win' | 'lose'>('none');
   const [stats, setStats] = useState({ kills: 0, score: 0, accuracy: 0 });
   const overlayRef = useRef<'none' | 'pause' | 'win' | 'lose'>('none');
+  const [showTutorial, setShowTutorial] = useState(() => {
+    return !localStorage.getItem('bloomverse_tutorial_done');
+  });
 
   const lvlIndex = Math.min((parseInt(levelId || '1') || 1) - 1, LEVELS.length - 1);
   const level = LEVELS[lvlIndex];
@@ -106,9 +110,16 @@ export default function Game() {
   const quit = useCallback(() => navigate('/levels'), [navigate]);
   const home = useCallback(() => navigate('/'), [navigate]);
 
+  const closeTutorial = useCallback(() => {
+    localStorage.setItem('bloomverse_tutorial_done', '1');
+    setShowTutorial(false);
+  }, []);
+
   return (
     <div className={styles.container}>
       <canvas ref={canvasRef} className={styles.canvas} />
+
+      {showTutorial && <Tutorial onClose={closeTutorial} />}
 
       {/* PAUSE OVERLAY */}
       {overlay === 'pause' && (
