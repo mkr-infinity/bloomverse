@@ -1,57 +1,106 @@
 import { useNavigate } from 'react-router-dom';
 import logoSvg from '../assets/logo.svg';
+import ActionBackground from '../components/ActionBackground';
 import styles from './About.module.css';
+
+const FEATURES = [
+  { val: '∞', label: 'ENDLESS WAVES' },
+  { val: '6', label: 'WARZONES' },
+  { val: '5', label: 'ENEMY CLASSES' },
+  { val: '8', label: 'OPERATIVES' },
+];
+
+const ENEMIES = [
+  { name: 'WALKER', desc: 'Slow but relentless shamblers that swarm in numbers.' },
+  { name: 'RUNNER', desc: 'Fast, erratic chargers that close the gap in seconds.' },
+  { name: 'TANK', desc: 'Heavily armored brutes that soak up everything you fire.' },
+  { name: 'EXPLOSIVE', desc: 'Volatile rushers that detonate on contact — keep your distance.' },
+  { name: 'BOSS', desc: 'Apex horrors with massive health pools and devastating hits.' },
+];
 
 export default function About() {
   const navigate = useNavigate();
 
   return (
     <div className={styles.container}>
+      <ActionBackground />
+      <div className={styles.scrim} />
+
       <div className={styles.header}>
-        <button className={styles.back} onClick={() => navigate('/')}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <button className={styles.back} onClick={() => navigate('/')} aria-label="Back">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
         </button>
-        <h1 className={styles.title}>ABOUT</h1>
+        <h1 className={styles.title}>INTEL</h1>
+        <span className={styles.headTag}>CLASSIFIED</span>
       </div>
 
       <div className={styles.content}>
         <div className={styles.hero}>
-          <img src={logoSvg} alt="Bloomverse" className={styles.logo} />
+          <div className={styles.logoRing}>
+            <img src={logoSvg} alt="Bloomverse" className={styles.logo} />
+          </div>
           <h2 className={styles.gameName}>BLOOMVERSE</h2>
-          <p className={styles.tagline}>Survive. Fight. Escape.</p>
-          <p className={styles.version}>Version 1.0.0</p>
+          <p className={styles.tagline}>SURVIVE &middot; FIGHT &middot; ESCAPE</p>
+          <span className={styles.version}>BUILD v1.0.0</span>
         </div>
 
-        <div className={styles.description}>
-          <p>
-            A single-player action survival game set in a collapsing multiverse.
-            Fight through waves of enemies across distorted worlds, upgrade your arsenal,
-            and escape the void.
+        <div className={styles.statGrid}>
+          {FEATURES.map((f) => (
+            <div key={f.label} className={styles.statCard}>
+              <span className={styles.statVal}>{f.val}</span>
+              <span className={styles.statLabel}>{f.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <section className={styles.panel}>
+          <h3 className={styles.panelTitle}><span className={styles.bar} />MISSION BRIEFING</h3>
+          <p className={styles.body}>
+            The barrier between worlds has shattered. Reality is bleeding into reality, and
+            from the cracks pours an endless tide of the infected. <strong>Bloomverse</strong> is
+            a fast, top-down action-survival shooter where you drop into collapsing dimensions
+            and hold the line against wave after wave of nightmares.
           </p>
-        </div>
+          <p className={styles.body}>
+            There is no extraction. There is no safe zone. Every cleared wave drags you deeper
+            into the void — so you fight, you scavenge, and you adapt, knowing the next horde is
+            always bigger than the last.
+          </p>
+        </section>
 
-        <div className={styles.credits}>
-          <p className={styles.builtBy}>Built by <span className={styles.accent}>MKR Infinity</span></p>
-        </div>
+        <section className={styles.panel}>
+          <h3 className={styles.panelTitle}><span className={styles.bar} />HOW IT PLAYS</h3>
+          <ul className={styles.list}>
+            <li><span className={styles.dot} /> Move with <b>WASD</b>, aim with the mouse, and fire to thin the horde.</li>
+            <li><span className={styles.dot} /> Survive every wave of a mission to clear it and bank <b>coins</b>.</li>
+            <li><span className={styles.dot} /> Spend coins in the <b>Armory</b> to unlock operatives, guns and gear.</li>
+            <li><span className={styles.dot} /> Push through six warzones — and then keep going, forever.</li>
+          </ul>
+        </section>
 
-        <div className={styles.links}>
-          <a href="https://github.com/mkr-infinity/bloomverse" target="_blank" rel="noopener noreferrer" className={styles.link}>
-            <span className={styles.linkLabel}>Project Repository</span>
-            <span className={styles.linkUrl}>github.com/mkr-infinity/bloomverse</span>
-          </a>
-          <a href="https://github.com/mkr-infinity/bloomverse/issues" target="_blank" rel="noopener noreferrer" className={styles.link}>
-            <span className={styles.linkLabel}>Report Issues</span>
-            <span className={styles.linkUrl}>Submit bug reports</span>
-          </a>
-          <a href="https://github.com/mkr-infinity/bloomverse/issues/new" target="_blank" rel="noopener noreferrer" className={styles.link}>
-            <span className={styles.linkLabel}>Request Features</span>
-            <span className={styles.linkUrl}>Suggest new ideas</span>
-          </a>
-          <a href="https://github.com/mkr-infinity/bloomverse#contributing" target="_blank" rel="noopener noreferrer" className={styles.link}>
-            <span className={styles.linkLabel}>Contribute</span>
-            <span className={styles.linkUrl}>Help build Bloomverse</span>
-          </a>
-        </div>
+        <section className={styles.panel}>
+          <h3 className={styles.panelTitle}><span className={styles.bar} />KNOWN HOSTILES</h3>
+          <div className={styles.enemyList}>
+            {ENEMIES.map((e) => (
+              <div key={e.name} className={styles.enemyRow}>
+                <span className={styles.enemyName}>{e.name}</span>
+                <span className={styles.enemyDesc}>{e.desc}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <p className={styles.builtBy}>FORGED BY <span className={styles.accent}>MKR INFINITY</span></p>
+
+        <a
+          href="https://github.com/mkr-infinity/bloomverse"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.repoBtn}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.7.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.5 18.3 4.8 18.3 4.8c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z" /></svg>
+          <span>PROJECT REPOSITORY</span>
+        </a>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Chakra+Petch:wght@400;500;600;700&family=Russo+One&family=Black+Ops+One&family=Teko:wght@400;500;600;700&display=swap');
 
 :root {
   --bg-primary: #0a0a0f;
@@ -15,8 +15,13 @@
   --danger: #ff2d55;
   --warning: #ffaa00;
   --success: #00ff88;
-  --font-display: 'Orbitron', monospace;
-  --font-body: 'Rajdhani', sans-serif;
+  /* Typography — game-aesthetic font system (different roles per screen) */
+  --font-display: 'Orbitron', monospace;     /* sci-fi HUD / menus */
+  --font-combat: 'Black Ops One', cursive;    /* heavy combat titles (VICTORY, ABOUT...) */
+  --font-heavy: 'Russo One', sans-serif;      /* bold game headings / shop */
+  --font-tactical: 'Chakra Petch', sans-serif;/* tactical UI / body copy */
+  --font-condensed: 'Teko', sans-serif;       /* condensed esports numerals */
+  --font-body: 'Rajdhani', sans-serif;        /* general body */
   --glow-red: 0 0 20px rgba(255, 45, 85, 0.5);
   --glow-green: 0 0 20px rgba(0, 255, 136, 0.5);
   --glow-cyan: 0 0 20px rgba(0, 212, 255, 0.5);
