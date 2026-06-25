@@ -110,6 +110,17 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, w: numbe
   // HUD - Bottom left health/armor
   drawHUD(ctx, state, w, h);
 
+  drawOverlays(ctx, state, w, h);
+}
+
+// HUD + screen overlays only — for drawing on a 2D layer above the 3D scene.
+export function drawHUDLayer(ctx: CanvasRenderingContext2D, state: GameState, w: number, h: number) {
+  drawHUD(ctx, state, w, h);
+  drawOverlays(ctx, state, w, h);
+}
+
+function drawOverlays(ctx: CanvasRenderingContext2D, state: GameState, w: number, h: number) {
+
   // Wave announcement
   if (state.waveAnnounce > 0) {
     const alpha = Math.min(1, state.waveAnnounce / 30);

@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { getLevel, createGameState, tick, GameState } from '../game/engine';
-import { render } from '../game/renderer';
+import { drawHUDLayer } from '../game/renderer';
+import { GameScene3D } from '../game/three/scene';
 import { createInput } from '../game/input';
 import { CHARACTERS } from '../game/characters';
 import { buildLoadout } from '../game/weapons';
@@ -13,9 +14,11 @@ import styles from './Game.module.css';
 export default function Game() {
   const { levelId } = useParams();
   const navigate = useNavigate();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);      // WebGL world
+  const hudRef = useRef<HTMLCanvasElement>(null);          // 2D HUD overlay
   const stateRef = useRef<GameState | null>(null);
   const inputRef = useRef<ReturnType<typeof createInput> | null>(null);
+  const sceneRef = useRef<GameScene3D | null>(null);
   const animRef = useRef(0);
   const { progress, updateProgress, save, addCoins } = useGameStore();
   const [overlay, setOverlay] = useState<'none' | 'pause' | 'win' | 'lose'>('none');
@@ -39,26 +42,59 @@ export default function Game() {
 
   useEffect(() => {
     const canvas = canvasRef.current!;
-    const ctx = canvas.getContext('2d')!;
+    const hud = hudRef.current!;
+    const ctx = hud.getContext('2d')!;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    hud.width = window.innerWidth;
+    hud.height = window.innerHeight;
     canvas.style.cursor = 'none';
 
     stateRef.current = createGameState(canvas.width, canvas.height, level, makeLoadout());
     inputRef.current = createInput(canvas);
+    sceneRef.current = new GameScene3D(canvas, level, skin);
 
-    const onResize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    const onResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      hud.width = window.innerWidth;
+      hud.height = window.innerHeight;
+      sceneRef.current?.onResize();
+    };
     window.addEventListener('resize', onResize);
 
-    const loop = () => {
-      if (!stateRef.current || !inputRef.current) return;
-      const w = canvas.width, h = canvas.height;
-      const gs = stateRef.current;
+    // Fixed-timestep accumulator: physics runs at a constant rate so the game
+    // plays identically on 60/120/144 Hz displays (fixes the old speed bug).
+    const FIXED_DT = 1000 / 60;
+    let last = performance.now();
+    let acc = 0;
 
+    const loop = (now: number) => {
+      if (!stateRef.current || !inputRef.current || !sceneRef.current) return;
+      const w = canvas.width, h = canvas.height;
+
+      // Advance simulation in fixed steps
+      let frameDt = now - last;
+      last = now;
+      if (frameDt > 250) frameDt = 250; // avoid spiral-of-death after tab blur
+      acc += frameDt;
+      const gs = stateRef.current;
       if (!gs.paused && !gs.gameOver && !gs.levelComplete) {
-        stateRef.current = tick(gs, inputRef.current.state, w, h, level);
+        while (acc >= FIXED_DT) {
+          stateRef.current = tick(stateRef.current, inputRef.current.state, w, h, level);
+          acc -= FIXED_DT;
+        }
+      } else {
+        acc = 0;
       }
-      render(ctx, stateRef.current, w, h, level, skin);
+
+      // Camera shake amplitude from engine state drives a small render offset
+      sceneRef.current.update(stateRef.current, w, h, frameDt / 1000);
+      sceneRef.current.render();
+
+      // HUD overlay
+      ctx.clearRect(0, 0, w, h);
+      drawHUDLayer(ctx, stateRef.current, w, h);
 
       if (stateRef.current.levelComplete && overlayRef.current === 'none') {
         const s = stateRef.current;
@@ -89,6 +125,7 @@ export default function Game() {
     return () => {
       cancelAnimationFrame(animRef.current);
       inputRef.current?.destroy();
+      sceneRef.current?.dispose();
       window.removeEventListener('resize', onResize);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -131,6 +168,7 @@ export default function Game() {
   return (
     <div className={styles.container}>
       <canvas ref={canvasRef} className={styles.canvas} />
+      <canvas ref={hudRef} className={styles.hud} />
 
       {showTutorial && <Tutorial onClose={closeTutorial} />}
 

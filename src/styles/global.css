@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Chakra+Petch:wght@400;500;600;700&family=Russo+One&family=Black+Ops+One&family=Teko:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Chakra+Petch:wght@400;500;600;700&family=Russo+One&family=Black+Ops+One&family=Teko:wght@400;500;600;700&family=Bungee+Shade&family=Bungee+Inline&family=Monoton&family=Audiowide&family=Faster+One&family=Rubik+Mono+One&display=swap');
 
 :root {
   --bg-primary: #0a0a0f;
@@ -22,6 +22,13 @@
   --font-tactical: 'Chakra Petch', sans-serif;/* tactical UI / body copy */
   --font-condensed: 'Teko', sans-serif;       /* condensed esports numerals */
   --font-body: 'Rajdhani', sans-serif;        /* general body */
+  /* 3D / display "game cover" fonts — used by the randomized start screen */
+  --font-3d-shade: 'Bungee Shade', cursive;   /* layered drop-shadow 3D block */
+  --font-3d-inline: 'Bungee Inline', cursive; /* inline-stroke 3D block */
+  --font-3d-neon: 'Monoton', cursive;         /* retro neon-tube */
+  --font-3d-chrome: 'Audiowide', cursive;     /* chrome / cyber-tech */
+  --font-3d-speed: 'Faster One', cursive;     /* italic speed / racing */
+  --font-3d-mono: 'Rubik Mono One', sans-serif;/* fat mono headline */
   --glow-red: 0 0 20px rgba(255, 45, 85, 0.5);
   --glow-green: 0 0 20px rgba(0, 255, 136, 0.5);
   --glow-cyan: 0 0 20px rgba(0, 212, 255, 0.5);
