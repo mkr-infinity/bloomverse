@@ -156,152 +156,41 @@
   white-space: nowrap;
 }
 
-/* ===== CITY ===== */
-.biome_city .sky {
-  background: linear-gradient(180deg, #1a1f33 0%, #2a2438 38%, #3a2f3a 60%, #1c1822 100%);
+/* ===== UNIFIED BACKGROUND (same scenery for every level) ===== */
+.biome .sky {
+  background: linear-gradient(180deg, #05060c 0%, #0b0d18 36%, #241823 60%, #5a2a20 84%, #2a0d08 100%);
 }
-.biome_city .horizon {
-  background:
-    linear-gradient(180deg, transparent, rgba(10,12,22,0.9));
-  clip-path: polygon(0 100%,0 70%,8% 60%,16% 72%,24% 50%,33% 66%,42% 46%,52% 64%,60% 48%,70% 66%,80% 52%,90% 64%,100% 56%,100% 100%);
+.biome .horizon {
+  background: radial-gradient(70% 120% at 50% 100%, rgba(255,110,40,0.32), transparent 72%);
+  opacity: 0.9;
 }
-.biome_city .skyline {
-  background: linear-gradient(180deg, #0e1018 0%, #07080e 100%);
+.biome .skyline {
+  background: linear-gradient(180deg, #0b0c14 0%, #060710 100%);
   clip-path: polygon(0% 100%,0% 55%,4% 55%,4% 30%,9% 30%,9% 58%,13% 58%,13% 42%,18% 42%,18% 62%,23% 62%,23% 22%,28% 22%,28% 60%,33% 60%,33% 48%,38% 48%,38% 64%,44% 64%,44% 34%,49% 34%,49% 60%,54% 60%,54% 26%,59% 26%,59% 58%,64% 58%,64% 46%,69% 46%,69% 64%,75% 64%,75% 38%,80% 38%,80% 60%,85% 60%,85% 52%,90% 52%,90% 64%,95% 64%,95% 44%,100% 44%,100% 100%);
 }
-.biome_city .skyline::after {
+.biome .skyline::after {
   content: '';
   position: absolute; inset: 0;
   background-image:
-    radial-gradient(2px 3px at 6% 40%, rgba(255,210,120,0.8), transparent),
-    radial-gradient(2px 3px at 25% 32%, rgba(255,210,120,0.7), transparent),
-    radial-gradient(2px 3px at 55% 36%, rgba(120,200,255,0.6), transparent),
-    radial-gradient(2px 3px at 77% 48%, rgba(255,210,120,0.7), transparent),
-    radial-gradient(2px 3px at 91% 54%, rgba(255,160,120,0.7), transparent);
+    radial-gradient(2px 3px at 6% 40%, rgba(255,180,90,0.8), transparent),
+    radial-gradient(2px 3px at 25% 32%, rgba(255,160,80,0.7), transparent),
+    radial-gradient(2px 3px at 55% 36%, rgba(120,180,255,0.55), transparent),
+    radial-gradient(2px 3px at 77% 48%, rgba(255,170,90,0.7), transparent),
+    radial-gradient(2px 3px at 91% 54%, rgba(255,120,80,0.7), transparent);
 }
-.biome_city .ground {
-  background: linear-gradient(180deg, #12141c 0%, #090a10 100%);
+.biome .ground {
+  background: linear-gradient(180deg, #0f1016 0%, #060710 100%);
 }
-.biome_city .ground::before {
-  content: ''; position: absolute; inset: 0;
-  background: repeating-linear-gradient(90deg, transparent 0 60px, rgba(255,200,80,0.06) 60px 64px);
-}
-
-/* ===== DESERT ===== */
-.biome_desert .sky {
-  background: linear-gradient(180deg, #d98c4a 0%, #e0a866 30%, #caa06a 55%, #6e5234 100%);
-}
-.biome_desert .horizon {
-  background: linear-gradient(180deg, rgba(120,90,50,0.6), rgba(70,52,30,0.9));
-  clip-path: polygon(0 100%,0 64%,20% 50%,40% 64%,60% 46%,80% 60%,100% 50%,100% 100%);
-}
-.biome_desert .skyline {
-  background: linear-gradient(180deg, #5a4226 0%, #3c2c18 100%);
-  clip-path: polygon(0 100%,0 70%,10% 66%,14% 50%,18% 66%,30% 64%,40% 56%,46% 60%,58% 52%,66% 62%,78% 58%,86% 50%,92% 60%,100% 56%,100% 100%);
-}
-.biome_desert .ground {
-  background: linear-gradient(180deg, #7a5a32 0%, #4a3620 100%);
-}
-.biome_desert .ground::before {
+.biome .ground::before {
   content: ''; position: absolute; inset: 0;
   background:
-    radial-gradient(60% 30% at 30% 20%, rgba(0,0,0,0.15), transparent),
-    radial-gradient(50% 26% at 70% 40%, rgba(0,0,0,0.12), transparent);
+    radial-gradient(50% 40% at 25% 25%, rgba(255,90,30,0.14), transparent),
+    radial-gradient(40% 34% at 72% 40%, rgba(255,120,40,0.10), transparent),
+    repeating-linear-gradient(90deg, transparent 0 60px, rgba(255,150,60,0.05) 60px 64px);
 }
-
-/* ===== FROZEN ===== */
-.biome_frozen .sky {
-  background: linear-gradient(180deg, #16242f 0%, #28465a 40%, #4a6f86 70%, #2a3e4a 100%);
-}
-.biome_frozen .horizon {
-  background: linear-gradient(180deg, rgba(180,220,240,0.5), rgba(40,70,90,0.85));
-  clip-path: polygon(0 100%,0 60%,15% 36%,28% 60%,42% 30%,56% 58%,70% 38%,84% 60%,100% 46%,100% 100%);
-}
-.biome_frozen .skyline {
-  background: linear-gradient(180deg, #2a4658 0%, #16242f 100%);
-  clip-path: polygon(0 100%,0 68%,12% 50%,20% 66%,34% 54%,44% 64%,56% 52%,68% 64%,80% 56%,92% 66%,100% 58%,100% 100%);
-}
-.biome_frozen .ground {
-  background: linear-gradient(180deg, #c4dcec 0%, #7fa4ba 60%, #3a5160 100%);
-  opacity: 0.92;
-}
-.biome_frozen .ground::before {
-  content: ''; position: absolute; inset: 0;
-  background-image:
-    linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%);
-}
-
-/* ===== BURNING ===== */
-.biome_burning .sky {
-  background: linear-gradient(180deg, #2a0c06 0%, #6e1c08 35%, #c43a0e 58%, #571405 100%);
-}
-.biome_burning .horizon {
-  background: linear-gradient(180deg, rgba(255,120,30,0.35), rgba(60,16,6,0.9));
-  clip-path: polygon(0 100%,0 66%,12% 54%,22% 70%,34% 50%,46% 66%,58% 48%,70% 66%,82% 54%,92% 66%,100% 56%,100% 100%);
-}
-.biome_burning .skyline {
-  background: linear-gradient(180deg, #2a0e08 0%, #150603 100%);
-  clip-path: polygon(0 100%,0 56%,5% 56%,5% 34%,10% 34%,10% 60%,15% 60%,16% 44%,21% 44%,21% 64%,27% 64%,27% 28%,32% 28%,32% 60%,38% 60%,40% 50%,45% 50%,45% 66%,52% 66%,52% 36%,58% 36%,58% 60%,64% 60%,64% 48%,70% 48%,70% 64%,78% 64%,78% 40%,84% 40%,84% 60%,92% 60%,92% 52%,100% 52%,100% 100%);
-}
-.biome_burning .ground {
-  background: linear-gradient(180deg, #3a160a 0%, #150603 100%);
-}
-.biome_burning .ground::before {
-  content: ''; position: absolute; inset: 0;
-  background-image:
-    radial-gradient(50% 40% at 25% 30%, rgba(255,90,20,0.35), transparent),
-    radial-gradient(40% 36% at 68% 50%, rgba(255,120,20,0.3), transparent);
-  animation: emberGlow 3s ease-in-out infinite alternate;
-}
-
-/* ===== SKY ===== */
-.biome_sky .sky {
-  background: linear-gradient(180deg, #0a1030 0%, #1a2a66 40%, #3a5aa0 65%, #16204a 100%);
-}
-.biome_sky .horizon {
-  background: radial-gradient(60% 100% at 50% 100%, rgba(160,200,255,0.4), transparent 70%);
-}
-.biome_sky .skyline {
-  background: transparent;
-}
-.biome_sky .skyline::after {
-  content: ''; position: absolute; left: 10%; right: 10%; bottom: 0; height: 60%;
-  background: linear-gradient(180deg, rgba(80,110,180,0.6), rgba(30,40,90,0.3));
-  border-radius: 50% 50% 0 0 / 80% 80% 0 0;
-  box-shadow: 0 -10px 40px rgba(120,160,255,0.2);
-}
-.biome_sky .ground {
-  background: radial-gradient(70% 120% at 50% 0%, rgba(60,90,170,0.5), transparent 70%);
-}
-.biome_sky .sky::before {
-  content: ''; position: absolute; inset: 0;
-  background-image:
-    radial-gradient(1px 1px at 12% 18%, #fff, transparent),
-    radial-gradient(1px 1px at 34% 8%, #fff, transparent),
-    radial-gradient(1.5px 1.5px at 58% 22%, rgba(255,255,255,0.8), transparent),
-    radial-gradient(1px 1px at 80% 12%, #fff, transparent),
-    radial-gradient(1px 1px at 92% 26%, rgba(255,255,255,0.7), transparent);
-}
-
-/* ===== VOID ===== */
-.biome_void .sky {
-  background: radial-gradient(ellipse at 50% 40%, #2a0a3a 0%, #12041c 55%, #040208 100%);
-}
-.biome_void .horizon {
-  background: radial-gradient(60% 100% at 50% 100%, rgba(170,40,200,0.35), transparent 70%);
-}
-.biome_void .skyline { background: transparent; }
-.biome_void .ground {
-  background: radial-gradient(70% 130% at 50% 0%, rgba(90,20,110,0.4), transparent 70%);
-}
-.biome_void .sky::before {
-  content: ''; position: absolute; inset: 0;
-  background-image:
-    radial-gradient(2px 2px at 20% 30%, rgba(220,120,255,0.8), transparent),
-    radial-gradient(1px 1px at 46% 16%, rgba(180,120,255,0.7), transparent),
-    radial-gradient(2px 2px at 72% 38%, rgba(255,120,220,0.7), transparent),
-    radial-gradient(1px 1px at 88% 22%, rgba(200,120,255,0.6), transparent);
-  animation: voidPulse 4s ease-in-out infinite alternate;
+.biome .haze {
+  background: linear-gradient(180deg, transparent, rgba(120,60,40,0.22), transparent);
+  animation: emberGlow 3.5s ease-in-out infinite alternate;
 }
 
 /* === NODES === */
