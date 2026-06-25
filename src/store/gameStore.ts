@@ -178,6 +178,16 @@ export const useGameStore = create<GameState>((set, get) => ({
     const progress = await loadData<GameProgress>('gameState', 'progress');
     if (player) set({ player });
     if (progress) set({ progress: { ...defaultProgress, ...progress } });
+
+    // First-time welcome bonus — granted once, persisted independently so it
+    // survives New Game / reset and is never handed out twice.
+    const starterClaimed = await loadData<boolean>('gameState', 'starterClaimed');
+    if (!starterClaimed) {
+      const STARTER_COINS = 500;
+      set((s) => ({ progress: { ...s.progress, coins: (s.progress.coins || 0) + STARTER_COINS } }));
+      await saveData('gameState', 'starterClaimed', true);
+      await get().save();
+    }
   },
 
   reset: () => set({ player: { ...defaultPlayer }, progress: { ...defaultProgress } }),
