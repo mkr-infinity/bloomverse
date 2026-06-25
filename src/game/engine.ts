@@ -53,6 +53,7 @@ export interface GameState {
   paused: boolean;
   kills: number;
   waveAnnounce: number; // frames remaining to show wave text
+  lastShot: number; // frame of the last fired shot (per-shot cooldown)
 }
 
 export interface LevelDef {
@@ -200,7 +201,7 @@ export function createGameState(w: number, h: number, level: LevelDef): GameStat
     enemiesSpawned: 0, enemiesInWave: totalEnemies,
     spawnTimer: 60, screenShake: 0, frame: 0,
     isMoving: false, waveComplete: false, levelComplete: false,
-    gameOver: false, paused: false, kills: 0, waveAnnounce: 90,
+    gameOver: false, paused: false, kills: 0, waveAnnounce: 90, lastShot: -100,
   };
 }
 
@@ -237,8 +238,11 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
   s.playerY = Math.max(20, Math.min(h - 20, s.playerY + (dy / len) * speed));
   s.playerAngle = Math.atan2(input.mouseY - s.playerY, input.mouseX - s.playerX);
 
-  // Shooting
-  if (input.shoot && s.ammo > 0 && s.frame % 8 === 0) {
+  // Shooting — fire-rate is a per-shot cooldown (not a global frame modulo),
+  // so a single quick click always fires once the cooldown has elapsed.
+  const FIRE_COOLDOWN = 8;
+  if (input.shoot && s.ammo > 0 && s.frame - s.lastShot >= FIRE_COOLDOWN) {
+    s.lastShot = s.frame;
     const bSpeed = 10;
     const spread = 0.05;
     const angle = s.playerAngle + (Math.random() - 0.5) * spread;

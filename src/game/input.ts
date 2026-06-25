@@ -5,7 +5,7 @@ export interface Input {
 }
 
 export function createInput(canvas: HTMLCanvasElement) {
-  const state: Input = { up: false, down: false, left: false, right: false, shoot: false, reload: false, mouseX: 0, mouseY: 0 };
+  const state: Input = { up: false, down: false, left: false, right: false, shoot: false, reload: false, mouseX: canvas.width / 2, mouseY: canvas.height / 2 - 120 };
   let touchJoystickId: number | null = null;
   let touchJoystickStart = { x: 0, y: 0 };
 
@@ -26,8 +26,10 @@ export function createInput(canvas: HTMLCanvasElement) {
     if (e.code === 'Space') state.shoot = false;
   };
   const mouseMove = (e: MouseEvent) => { const r = canvas.getBoundingClientRect(); state.mouseX = e.clientX - r.left; state.mouseY = e.clientY - r.top; };
-  const mouseDown = () => { state.shoot = true; };
-  const mouseUp = () => { state.shoot = false; };
+  const mouseDown = (e: MouseEvent) => { if (e.button === 0) { state.shoot = true; e.preventDefault(); } };
+  const mouseUp = (e: MouseEvent) => { if (e.button === 0) state.shoot = false; };
+  const mouseLeave = () => { state.shoot = false; };
+  const contextMenu = (e: Event) => e.preventDefault();
 
   // Touch: left half = move joystick, right half = shoot (aim at touch point)
   const touchStart = (e: TouchEvent) => {
@@ -86,7 +88,9 @@ export function createInput(canvas: HTMLCanvasElement) {
   window.addEventListener('keyup', keyUp);
   canvas.addEventListener('mousemove', mouseMove);
   canvas.addEventListener('mousedown', mouseDown);
-  canvas.addEventListener('mouseup', mouseUp);
+  window.addEventListener('mouseup', mouseUp);
+  canvas.addEventListener('mouseleave', mouseLeave);
+  canvas.addEventListener('contextmenu', contextMenu);
   canvas.addEventListener('touchstart', touchStart, { passive: false });
   canvas.addEventListener('touchmove', touchMove, { passive: false });
   canvas.addEventListener('touchend', touchEnd);
@@ -98,7 +102,9 @@ export function createInput(canvas: HTMLCanvasElement) {
       window.removeEventListener('keyup', keyUp);
       canvas.removeEventListener('mousemove', mouseMove);
       canvas.removeEventListener('mousedown', mouseDown);
-      canvas.removeEventListener('mouseup', mouseUp);
+      window.removeEventListener('mouseup', mouseUp);
+      canvas.removeEventListener('mouseleave', mouseLeave);
+      canvas.removeEventListener('contextmenu', contextMenu);
       canvas.removeEventListener('touchstart', touchStart);
       canvas.removeEventListener('touchmove', touchMove);
       canvas.removeEventListener('touchend', touchEnd);
