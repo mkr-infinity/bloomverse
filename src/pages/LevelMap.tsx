@@ -58,6 +58,9 @@ export default function LevelMap() {
           <p className={styles.headerSub}>Endless mission map</p>
         </div>
         <div className={styles.headerRight}>
+          <button className={styles.backBtn} onClick={() => navigate('/armory')} aria-label="Armory" title="Armory">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 11l9-8 9 8M5 10v10h14V10M9 21v-6h6v6"/></svg>
+          </button>
           <div className={styles.coinBalance}><CoinIcon size={15} />{progress.coins || 0}</div>
           <div className={styles.headerBadge}>LV {maxLevel}</div>
         </div>

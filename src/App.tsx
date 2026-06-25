@@ -10,6 +10,7 @@ const Settings = lazy(() => import('./pages/Settings'));
 const About = lazy(() => import('./pages/About'));
 const Support = lazy(() => import('./pages/Support'));
 const Archive = lazy(() => import('./pages/Archive'));
+const Armory = lazy(() => import('./pages/Armory'));
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/support" element={<Support />} />
           <Route path="/archive" element={<Archive />} />
+          <Route path="/armory" element={<Armory />} />
         </Routes>
       </Suspense>
     </HashRouter>

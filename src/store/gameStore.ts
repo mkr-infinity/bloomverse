@@ -40,6 +40,8 @@ export interface GameProgress {
   selectedCharacter: string;
   coins: number;
   unlockedCharacters: string[];
+  equippedWeapon: string;
+  ownedGear: string[];
 }
 
 interface GameState {
@@ -57,6 +59,9 @@ interface GameState {
   addXP: (amount: number) => void;
   addCoins: (amount: number) => void;
   unlockCharacter: (id: string, price: number) => boolean;
+  buyWeapon: (id: string, price: number) => boolean;
+  equipWeapon: (id: string) => void;
+  buyGear: (id: string, price: number) => boolean;
   switchWeapon: (index: number) => void;
   save: () => Promise<void>;
   load: () => Promise<void>;
@@ -91,10 +96,12 @@ const defaultProgress: GameProgress = {
   playTime: 0,
   firstPlayDate: 0,
   achievements: [],
-  unlockedWeapons: ['pistol', 'rifle'],
+  unlockedWeapons: ['pistol'],
   selectedCharacter: 'ghost',
   coins: 0,
   unlockedCharacters: ['ghost'],
+  equippedWeapon: 'pistol',
+  ownedGear: [],
 };
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -147,9 +154,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     player: { ...s.player, activeWeaponIndex: index }
   })),
 
-  addCoins: (amount) => set((s) => ({
-    progress: { ...s.progress, coins: Math.max(0, (s.progress.coins || 0) + amount) }
-  })),
+  addCoins: (amount) => {
+    set((s) => ({
+      progress: { ...s.progress, coins: Math.max(0, (s.progress.coins || 0) + amount) }
+    }));
+    get().save();
+  },
 
   unlockCharacter: (id, price) => {
     const { progress } = get();
@@ -161,6 +171,46 @@ export const useGameStore = create<GameState>((set, get) => ({
         ...progress,
         coins: (progress.coins || 0) - price,
         unlockedCharacters: [...owned, id],
+      },
+    });
+    get().save();
+    return true;
+  },
+
+  buyWeapon: (id, price) => {
+    const { progress } = get();
+    const owned = progress.unlockedWeapons || [];
+    if (owned.includes(id)) return true;
+    if ((progress.coins || 0) < price) return false;
+    set({
+      progress: {
+        ...progress,
+        coins: (progress.coins || 0) - price,
+        unlockedWeapons: [...owned, id],
+        equippedWeapon: id, // auto-equip on purchase
+      },
+    });
+    get().save();
+    return true;
+  },
+
+  equipWeapon: (id) => {
+    const { progress } = get();
+    if (!(progress.unlockedWeapons || []).includes(id) && id !== 'pistol') return;
+    set({ progress: { ...progress, equippedWeapon: id } });
+    get().save();
+  },
+
+  buyGear: (id, price) => {
+    const { progress } = get();
+    const owned = progress.ownedGear || [];
+    if (owned.includes(id)) return true;
+    if ((progress.coins || 0) < price) return false;
+    set({
+      progress: {
+        ...progress,
+        coins: (progress.coins || 0) - price,
+        ownedGear: [...owned, id],
       },
     });
     get().save();

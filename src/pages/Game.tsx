@@ -5,6 +5,7 @@ import { getLevel, createGameState, tick, GameState } from '../game/engine';
 import { render } from '../game/renderer';
 import { createInput } from '../game/input';
 import { CHARACTERS } from '../game/characters';
+import { buildLoadout } from '../game/weapons';
 import Tutorial from '../components/Tutorial';
 import CoinIcon from '../components/CoinIcon';
 import styles from './Game.module.css';
@@ -29,6 +30,13 @@ export default function Game() {
   const charId = progress.selectedCharacter || 'ghost';
   const skin = CHARACTERS.find((c) => c.id === charId) || CHARACTERS[0];
 
+  // Build the active loadout from the equipped weapon + owned gear (read fresh
+  // from the store so purchases made before a run always apply).
+  const makeLoadout = () => {
+    const p = useGameStore.getState().progress;
+    return buildLoadout(p.equippedWeapon || 'pistol', p.ownedGear || []);
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
@@ -36,7 +44,7 @@ export default function Game() {
     canvas.height = window.innerHeight;
     canvas.style.cursor = 'none';
 
-    stateRef.current = createGameState(canvas.width, canvas.height, level);
+    stateRef.current = createGameState(canvas.width, canvas.height, level, makeLoadout());
     inputRef.current = createInput(canvas);
 
     const onResize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
@@ -100,7 +108,7 @@ export default function Game() {
   const resume = useCallback(() => { overlayRef.current = 'none'; setOverlay('none'); if (stateRef.current) stateRef.current.paused = false; }, []);
   const retry = useCallback(() => {
     const canvas = canvasRef.current!;
-    stateRef.current = createGameState(canvas.width, canvas.height, level);
+    stateRef.current = createGameState(canvas.width, canvas.height, level, makeLoadout());
     overlayRef.current = 'none';
     setOverlay('none');
   }, [level]);
@@ -108,7 +116,7 @@ export default function Game() {
     const nxt = level.id + 1;
     navigate(`/game/${nxt}`, { replace: true });
     const canvas = canvasRef.current!;
-    stateRef.current = createGameState(canvas.width, canvas.height, getLevel(nxt));
+    stateRef.current = createGameState(canvas.width, canvas.height, getLevel(nxt), makeLoadout());
     overlayRef.current = 'none';
     setOverlay('none');
   }, [level.id, navigate]);

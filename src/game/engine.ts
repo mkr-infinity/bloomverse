@@ -54,6 +54,9 @@ export interface GameState {
   kills: number;
   waveAnnounce: number; // frames remaining to show wave text
   lastShot: number; // frame of the last fired shot (per-shot cooldown)
+  weaponDamage: number;
+  fireCooldown: number;
+  pellets: number;
 }
 
 export interface LevelDef {
@@ -190,18 +193,30 @@ const ENEMY_STATS: Record<Enemy['type'], { health: number; speed: number; damage
   boss: { health: 600, speed: 0.7, damage: 25 },
 };
 
-export function createGameState(w: number, h: number, level: LevelDef): GameState {
+export interface GameLoadout {
+  damage: number;
+  fireCooldown: number;
+  pellets: number;
+  maxAmmo: number;
+  bonusHealth: number;
+  bonusArmor: number;
+}
+
+export function createGameState(w: number, h: number, level: LevelDef, loadout?: GameLoadout): GameState {
   const totalEnemies = level.waves.flat().reduce((s, e) => s + e.count, 0);
+  const lo: GameLoadout = loadout || { damage: 20, fireCooldown: 8, pellets: 1, maxAmmo: 50, bonusHealth: 0, bonusArmor: 0 };
+  const maxHealth = 100 + lo.bonusHealth;
   return {
     playerX: w / 2, playerY: h / 2, playerAngle: 0,
-    playerHealth: 100, playerMaxHealth: 100, playerArmor: 0,
-    ammo: 50, maxAmmo: 50, score: 0,
+    playerHealth: maxHealth, playerMaxHealth: maxHealth, playerArmor: lo.bonusArmor,
+    ammo: lo.maxAmmo, maxAmmo: lo.maxAmmo, score: 0,
     wave: 0, totalWaves: level.waves.length,
     enemies: [], bullets: [], pickups: [], particles: [],
     enemiesSpawned: 0, enemiesInWave: totalEnemies,
     spawnTimer: 60, screenShake: 0, frame: 0,
     isMoving: false, waveComplete: false, levelComplete: false,
     gameOver: false, paused: false, kills: 0, waveAnnounce: 90, lastShot: -100,
+    weaponDamage: lo.damage, fireCooldown: lo.fireCooldown, pellets: lo.pellets,
   };
 }
 
@@ -240,20 +255,23 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
 
   // Shooting — fire-rate is a per-shot cooldown (not a global frame modulo),
   // so a single quick click always fires once the cooldown has elapsed.
-  const FIRE_COOLDOWN = 8;
-  if (input.shoot && s.ammo > 0 && s.frame - s.lastShot >= FIRE_COOLDOWN) {
+  // Weapon stats (damage, cooldown, pellets) come from the equipped loadout.
+  if (input.shoot && s.ammo > 0 && s.frame - s.lastShot >= s.fireCooldown) {
     s.lastShot = s.frame;
-    const bSpeed = 10;
-    const spread = 0.05;
-    const angle = s.playerAngle + (Math.random() - 0.5) * spread;
-    s.bullets.push({
-      x: s.playerX + Math.cos(s.playerAngle) * 20,
-      y: s.playerY + Math.sin(s.playerAngle) * 20,
-      vx: Math.cos(angle) * bSpeed,
-      vy: Math.sin(angle) * bSpeed,
-      damage: 20 + Math.floor(level.id * 2),
-      life: 60,
-    });
+    const bSpeed = 11;
+    const pellets = Math.max(1, s.pellets);
+    const spread = pellets > 1 ? 0.32 : 0.05;
+    for (let p = 0; p < pellets; p++) {
+      const angle = s.playerAngle + (pellets > 1 ? (p / (pellets - 1) - 0.5) * spread : (Math.random() - 0.5) * spread);
+      s.bullets.push({
+        x: s.playerX + Math.cos(s.playerAngle) * 20,
+        y: s.playerY + Math.sin(s.playerAngle) * 20,
+        vx: Math.cos(angle) * bSpeed,
+        vy: Math.sin(angle) * bSpeed,
+        damage: s.weaponDamage + Math.floor(level.id * 1.5),
+        life: 60,
+      });
+    }
     s.ammo--;
     // Muzzle flash particle
     s.particles.push({

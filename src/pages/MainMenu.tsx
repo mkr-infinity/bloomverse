@@ -89,6 +89,13 @@ export default function MainMenu() {
               </div>
               <span className={styles.btnArrow}>&#8250;</span>
             </button>
+            <button className={styles.menuBtn} onClick={() => navigate('/armory')}>
+              <div className={styles.btnLeft}>
+                <span className={styles.btnIcon}>&#9876;</span>
+                <span className={styles.btnText}>ARMORY</span>
+              </div>
+              <span className={styles.btnArrow}>&#8250;</span>
+            </button>
             <div className={styles.divider} />
             <button className={styles.menuBtn} onClick={() => navigate('/archive')}>
               <div className={styles.btnLeft}>
