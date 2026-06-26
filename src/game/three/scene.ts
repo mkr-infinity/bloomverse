@@ -30,9 +30,11 @@ export class GameScene3D {
   private enemyViews = new Map<Enemy_id, EnemyView>();
   private bulletGroup = new THREE.Group();
   private pickupGroup = new THREE.Group();
+  private particleGroup = new THREE.Group();
   private muzzle: THREE.PointLight;
   private playerForward = new THREE.Vector3(0, 0, 1);
   private animPhase = 0;
+  private aimMarker!: THREE.Mesh;
 
   constructor(public canvas: HTMLCanvasElement, level: LevelDef, skin: CharacterSkin) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -72,12 +74,20 @@ export class GameScene3D {
     this.playerParts = createHumanoid(skinToColors(skin));
     this.scene.add(this.playerParts.group);
 
-    // Bullets + pickups containers
-    this.scene.add(this.bulletGroup, this.pickupGroup);
+    // Bullets + pickups + particles containers
+    this.scene.add(this.bulletGroup, this.pickupGroup, this.particleGroup);
 
     // Muzzle flash light (off by default)
     this.muzzle = new THREE.PointLight(0xffd070, 0, 18, 2);
     this.scene.add(this.muzzle);
+
+    // Aim marker — a flat ring on the ground showing where the gun points.
+    this.aimMarker = new THREE.Mesh(
+      new THREE.RingGeometry(0.6, 0.9, 20),
+      new THREE.MeshBasicMaterial({ color: 0xff2d55, transparent: true, opacity: 0.7, side: THREE.DoubleSide }),
+    );
+    this.aimMarker.rotation.x = -Math.PI / 2;
+    this.scene.add(this.aimMarker);
 
     // Camera
     this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -117,6 +127,12 @@ export class GameScene3D {
     const firing = state.particles.some((p) => p.color === '#ffff00' && p.life > 2);
     this.muzzle.intensity = firing ? 6 : 0;
     this.muzzle.position.copy(pWorld).addScaledVector(this.playerForward, 1.2).setY(1.5);
+
+    // Aim marker sits on the ground a few units ahead of the player along the aim.
+    const aimWorld = new THREE.Vector3().copy(pWorld).addScaledVector(this.playerForward, 8);
+    this.aimMarker.position.set(aimWorld.x, 0.05, aimWorld.z);
+    const pulse = 0.5 + Math.sin(this.animPhase * 3) * 0.2;
+    (this.aimMarker.material as THREE.MeshBasicMaterial).opacity = pulse;
 
     // === Enemies: sync by reference id stored on the enemy object ===
     const seen = new Set<Enemy_id>();
@@ -160,6 +176,9 @@ export class GameScene3D {
     // === Bullets ===
     this.syncBullets(state, w, h, scale);
 
+    // === Particles (muzzle, hit sparks, death bursts, blood) ===
+    this.syncParticles(state, w, h, scale);
+
     // === Pickups ===
     this.syncPickups(state, w, h, scale, dt);
 
@@ -181,10 +200,12 @@ export class GameScene3D {
   private syncBullets(state: GameState, w: number, h: number, scale: number) {
     // ensure enough pooled meshes
     while (this.bulletPool.length < state.bullets.length) {
+      // stretched streak along its travel direction for a tracer feel
       const m = new THREE.Mesh(
-        new THREE.SphereGeometry(0.18, 6, 6),
+        new THREE.CapsuleGeometry(0.1, 1.0, 3, 6),
         new THREE.MeshStandardMaterial({ color: 0xffdd33, emissive: 0xffaa00, emissiveIntensity: 3 }),
       );
+      m.rotation.z = Math.PI / 2;
       this.bulletGroup.add(m);
       this.bulletPool.push(m);
     }
@@ -194,6 +215,8 @@ export class GameScene3D {
         const b = state.bullets[i];
         m.visible = true;
         m.position.set((b.x - w / 2) * scale, 1.3, (b.y - h / 2) * scale);
+        // rotate the streak to match travel direction in the XZ plane
+        m.rotation.y = Math.PI / 2 - Math.atan2(-b.vy, b.vx);
       } else {
         m.visible = false;
       }
@@ -220,6 +243,39 @@ export class GameScene3D {
         m.rotation.y += dt * 2;
         m.rotation.x += dt * 1.2;
         (m.material as THREE.MeshStandardMaterial).emissive.setHex(colors[p.type] ?? 0xffffff);
+      } else {
+        m.visible = false;
+      }
+    }
+  }
+
+  // The engine emits short-lived particles per event (muzzle flash, hit sparks,
+  // death bursts, blood). We render them as small emissive points, pooled.
+  private particlePool: THREE.Mesh[] = [];
+  private syncParticles(state: GameState, w: number, h: number, scale: number) {
+    // muzzle particles are handled by the point light; render the rest
+    const live = state.particles.filter((p) => p.color !== '#ffff00');
+    while (this.particlePool.length < live.length) {
+      const m = new THREE.Mesh(
+        new THREE.SphereGeometry(0.12, 5, 5),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 2, transparent: true }),
+      );
+      this.particleGroup.add(m);
+      this.particlePool.push(m);
+    }
+    for (let i = 0; i < this.particlePool.length; i++) {
+      const m = this.particlePool[i];
+      const mat = m.material as THREE.MeshStandardMaterial;
+      if (i < live.length) {
+        const p = live[i];
+        m.visible = true;
+        m.position.set((p.x - w / 2) * scale, 0.6, (p.y - h / 2) * scale);
+        const lifeFrac = Math.max(0, p.life / 40);
+        mat.opacity = lifeFrac;
+        mat.color.set(p.color);
+        mat.emissive.set(p.color);
+        const s = p.size * 0.3 * (0.4 + lifeFrac);
+        m.scale.setScalar(s);
       } else {
         m.visible = false;
       }
