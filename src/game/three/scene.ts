@@ -182,6 +182,9 @@ export class GameScene3D {
     // === Pickups ===
     this.syncPickups(state, w, h, scale, dt);
 
+    // === Atmosphere: animate world-dressing objects (fire flicker, void swirl) ===
+    this.animateAtmosphere(dt);
+
     // === Camera: third-person follow behind the player, looking toward aim ===
     const camOffset = new THREE.Vector3()
       .copy(this.playerForward)
@@ -194,6 +197,19 @@ export class GameScene3D {
     const lerp = 1 - Math.pow(0.001, dt); // frame-rate independent smoothing
     this.camera.position.lerp(this.camTargetPos, lerp);
     this.camera.lookAt(this.camTargetLook);
+  }
+
+  private animateAtmosphere(dt: number) {
+    this.scene.traverse((o) => {
+      if (o.userData.flicker && o instanceof THREE.PointLight) {
+        o.intensity = 1.8 + Math.sin(this.animPhase * 4) * 0.5 + Math.random() * 0.4;
+      }
+      if (o.userData.swirl && o instanceof THREE.Mesh) {
+        o.rotation.y += dt * 1.2;
+        o.rotation.x += dt * 0.4;
+        o.position.y += Math.sin(this.animPhase + o.userData.swirl) * 0.004;
+      }
+    });
   }
 
   private bulletPool: THREE.Mesh[] = [];

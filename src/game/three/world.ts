@@ -103,22 +103,81 @@ export function buildArena(theme: WorldTheme, seed: number, w: number, h: number
   }
 
   // World-specific flavor
+  const farFromCenter = () => {
+    const x = (rand() - 0.5) * (w - 40), z = (rand() - 0.5) * (h - 40);
+    return Math.hypot(x, z) < 30 ? null : { x, z };
+  };
+
   if (theme.props === 'desert') {
-    for (let i = 0; i < 6; i++) {
-      const x = (rand() - 0.5) * (w - 40), z = (rand() - 0.5) * (h - 40);
-      if (Math.hypot(x, z) < 30) continue;
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.6, 4, 6), propMat);
-      trunk.position.set(x, 2, z);
-      group.add(trunk);
+    // dead trees + boulders
+    for (let i = 0; i < 8; i++) {
+      const p = farFromCenter(); if (!p) continue;
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.6, 4 + rand() * 2, 6), propMat);
+      trunk.position.set(p.x, 2 + rand(), p.z);
+      // bare branches
+      const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.2, 2, 4), propMat);
+      branch.position.set(p.x + 0.6, 3.5, p.z); branch.rotation.z = 0.8;
+      group.add(trunk, branch);
     }
+    for (let i = 0; i < 10; i++) {
+      const p = farFromCenter(); if (!p) continue;
+      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.6 + rand() * 1.2, 0), propMat);
+      rock.position.set(p.x, 0.5, p.z); rock.rotation.set(rand(), rand(), rand());
+      group.add(rock);
+    }
+  } else if (theme.props === 'city') {
+    // shipping containers + concrete barriers + wrecked vehicles (boxes)
+    for (let i = 0; i < 8; i++) {
+      const p = farFromCenter(); if (!p) continue;
+      const container = new THREE.Mesh(
+        new THREE.BoxGeometry(3 + rand() * 2, 1.6, 6 + rand() * 3),
+        new THREE.MeshStandardMaterial({ color: [0xb5532a, 0x2a5b8a, 0x4a7a3a, 0x8a8a2a][i % 4], roughness: 0.8 }),
+      );
+      container.position.set(p.x, 0.8, p.z); container.rotation.y = rand() * Math.PI;
+      group.add(container);
+    }
+  } else if (theme.props === 'frozen') {
+    // glowing ice crystals (emissive cyan spikes)
+    const iceMat = new THREE.MeshStandardMaterial({ color: 0x9fdfff, emissive: 0x4aa0ff, emissiveIntensity: 0.6, roughness: 0.2, transparent: true, opacity: 0.85 });
+    for (let i = 0; i < 14; i++) {
+      const p = farFromCenter(); if (!p) continue;
+      const s = 0.5 + rand() * 1.4;
+      const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(s, 0), iceMat);
+      crystal.position.set(p.x, s, p.z); crystal.rotation.set(rand(), rand(), rand());
+      group.add(crystal);
+    }
+  } else if (theme.props === 'burning') {
+    // scorched pillars with emissive lava cracks + ground ember light
+    const lavaMat = new THREE.MeshStandardMaterial({ color: 0x2a0a04, emissive: 0xff4400, emissiveIntensity: 0.7, roughness: 0.9 });
+    for (let i = 0; i < 8; i++) {
+      const p = farFromCenter(); if (!p) continue;
+      const pillar = new THREE.Mesh(new THREE.BoxGeometry(1.5, 4 + rand() * 3, 1.5), lavaMat);
+      pillar.position.set(p.x, 2 + rand() * 1.5, p.z);
+      group.add(pillar);
+    }
+    const fire = new THREE.PointLight(0xff5a10, 2.5, 60, 2);
+    fire.position.set((rand() - 0.5) * 30, 4, (rand() - 0.5) * 30);
+    fire.userData.flicker = true; // scene animates this
+    group.add(fire);
   } else if (theme.props === 'sky') {
-    // floating islands beyond the floor edge — decorative
-    for (let i = 0; i < 6; i++) {
+    // floating islands beyond the floor edge — decorative, emissive rim
+    const islandMat = new THREE.MeshStandardMaterial({ color: theme.ground, emissive: 0x3050a0, emissiveIntensity: 0.3, roughness: 0.9 });
+    for (let i = 0; i < 8; i++) {
       const x = (rand() - 0.5) * w * 1.6, z = (rand() - 0.5) * h * 1.6;
-      const y = -8 - rand() * 10;
-      const island = new THREE.Mesh(new THREE.DodecahedronGeometry(6 + rand() * 6, 0), propMat);
+      const y = -6 - rand() * 12;
+      const island = new THREE.Mesh(new THREE.DodecahedronGeometry(5 + rand() * 7, 0), islandMat);
       island.position.set(x, y, z);
       group.add(island);
+    }
+  } else if (theme.props === 'void') {
+    // emissive swirling shards
+    const shardMat = new THREE.MeshStandardMaterial({ color: 0x200830, emissive: 0xb040ff, emissiveIntensity: 0.8, roughness: 0.6 });
+    for (let i = 0; i < 12; i++) {
+      const p = farFromCenter(); if (!p) continue;
+      const shard = new THREE.Mesh(new THREE.TetrahedronGeometry(0.8 + rand() * 1.4, 0), shardMat);
+      shard.position.set(p.x, 1 + rand() * 4, p.z);
+      shard.userData.swirl = rand() * 6.28;
+      group.add(shard);
     }
   }
 
