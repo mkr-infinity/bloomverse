@@ -22,6 +22,10 @@ export interface Enemy {
   speed: number; damage: number;
   lastAttack: number;
   lastShot: number;
+  coverX: number;
+  coverY: number;
+  coverUntil: number;
+  lastCoverPick: number;
   frame: number;
 }
 
@@ -243,6 +247,40 @@ function isBlocked(x: number, y: number, radius: number, cover: Cover[]) {
   return cover.some((c) => overlapsCover(x, y, radius, c));
 }
 
+function lineIntersectsCover(x1: number, y1: number, x2: number, y2: number, cover: Cover) {
+  // Sample the segment; cheap and good enough for this arcade shooter.
+  const steps = Math.max(8, Math.ceil(Math.hypot(x2 - x1, y2 - y1) / 18));
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const x = x1 + (x2 - x1) * t;
+    const y = y1 + (y2 - y1) * t;
+    if (x >= cover.x - cover.w / 2 && x <= cover.x + cover.w / 2 && y >= cover.y - cover.h / 2 && y <= cover.y + cover.h / 2) return true;
+  }
+  return false;
+}
+
+function hasLineOfSight(x1: number, y1: number, x2: number, y2: number, cover: Cover[]) {
+  return !cover.some((c) => lineIntersectsCover(x1, y1, x2, y2, c));
+}
+
+function pickCoverPoint(e: Enemy, playerX: number, playerY: number, cover: Cover[]): Vec2 | null {
+  let best: { x: number; y: number; score: number } | null = null;
+  for (const c of cover) {
+    const dx = c.x - playerX;
+    const dy = c.y - playerY;
+    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+    // Stand on the far side of cover from the player, offset enough to peek.
+    const px = c.x + (dx / len) * (c.w / 2 + 28);
+    const py = c.y + (dy / len) * (c.h / 2 + 28);
+    const distEnemy = Math.hypot(px - e.x, py - e.y);
+    const distPlayer = Math.hypot(px - playerX, py - playerY);
+    if (distPlayer < 110 || distPlayer > 360 || isBlocked(px, py, 18, cover)) continue;
+    const score = distEnemy + Math.abs(distPlayer - 220) * 0.35;
+    if (!best || score < best.score) best = { x: px, y: py, score };
+  }
+  return best ? { x: best.x, y: best.y } : null;
+}
+
 const ENEMY_STATS: Record<Enemy['type'], { health: number; speed: number; damage: number }> = {
   walker: { health: 40, speed: 0.8, damage: 8 },
   runner: { health: 25, speed: 2.0, damage: 12 },
@@ -297,7 +335,7 @@ export function spawnEnemy(type: Enemy['type'], w: number, h: number, levelId: n
     case 3: x = -40; y = Math.random() * h; break;
   }
   const hp = Math.floor(stats.health * hpScale);
-  return { x, y, type, health: hp, maxHealth: hp, speed: stats.speed, damage: stats.damage, lastAttack: 0, lastShot: -120, frame: Math.random() * 100 };
+  return { x, y, type, health: hp, maxHealth: hp, speed: stats.speed, damage: stats.damage, lastAttack: 0, lastShot: -120, coverX: 0, coverY: 0, coverUntil: 0, lastCoverPick: -120, frame: Math.random() * 100 };
 }
 
 export function tick(state: GameState, input: { up: boolean; down: boolean; left: boolean; right: boolean; mouseX: number; mouseY: number; shoot: boolean; reload: boolean }, w: number, h: number, level: LevelDef): GameState {
@@ -406,19 +444,40 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
     const ranged = e.type === 'runner' || e.type === 'tank' || e.type === 'boss';
     const preferredRange = e.type === 'boss' ? 260 : e.type === 'tank' ? 210 : 160;
     if (dist > 1) {
-      // Random zigzag for non-tanks. Ranged enemies kite once inside their ideal range.
+      // Random zigzag for non-tanks. Ranged enemies can pick cover, then peek.
       const wobble = e.type === 'runner' ? Math.sin(e.frame * 0.1) * 0.5 : 0;
-      const dir = ranged && dist < preferredRange ? -0.35 : 1;
-      const nx = e.x + (edx / dist) * e.speed * dir + wobble;
-      const ny = e.y + (edy / dist) * e.speed * dir;
       const enemyRadius = e.type === 'boss' ? 34 : e.type === 'tank' ? 26 : 18;
+      const exposed = ranged && hasLineOfSight(e.x, e.y, s.playerX, s.playerY, s.cover) && dist < preferredRange + 120;
+      if (ranged && exposed && now - e.lastCoverPick > 90) {
+        const coverPoint = pickCoverPoint(e, s.playerX, s.playerY, s.cover);
+        if (coverPoint) {
+          e.coverX = coverPoint.x;
+          e.coverY = coverPoint.y;
+          e.coverUntil = now + 180;
+          e.lastCoverPick = now;
+        }
+      }
+      let targetX = s.playerX;
+      let targetY = s.playerY;
+      let dir = ranged && dist < preferredRange ? -0.35 : 1;
+      if (ranged && e.coverUntil > now) {
+        targetX = e.coverX;
+        targetY = e.coverY;
+        dir = 1;
+      }
+      const mdx = targetX - e.x;
+      const mdy = targetY - e.y;
+      const mLen = Math.sqrt(mdx * mdx + mdy * mdy) || 1;
+      const nx = e.x + (mdx / mLen) * e.speed * dir + wobble;
+      const ny = e.y + (mdy / mLen) * e.speed * dir;
       if (!isBlocked(nx, e.y, enemyRadius, s.cover)) e.x = nx;
       if (!isBlocked(e.x, ny, enemyRadius, s.cover)) e.y = ny;
     }
 
-    // Ranged enemies shoot at the player. This turns the horde into real shooter
-    // opponents while keeping walkers/exploders as close-range pressure.
-    if (ranged && dist < preferredRange + 80 && now - e.lastShot > (e.type === 'boss' ? 55 : e.type === 'tank' ? 85 : 105)) {
+    // Ranged enemies shoot at the player only with line of sight. Cover now
+    // blocks enemy aim, enabling real peek-and-shoot encounters.
+    const canShootPlayer = hasLineOfSight(e.x, e.y, s.playerX, s.playerY, s.cover);
+    if (ranged && canShootPlayer && dist < preferredRange + 80 && now - e.lastShot > (e.type === 'boss' ? 55 : e.type === 'tank' ? 85 : 105)) {
       e.lastShot = now;
       const lead = 0.16;
       const aimX = edx + (s.isMoving ? Math.cos(s.playerAngle) * lead * dist : 0);
