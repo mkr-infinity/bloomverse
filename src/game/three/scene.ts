@@ -29,6 +29,7 @@ export class GameScene3D {
   private playerParts!: HumanoidParts;
   private enemyViews = new Map<Enemy_id, EnemyView>();
   private bulletGroup = new THREE.Group();
+  private enemyBulletGroup = new THREE.Group();
   private pickupGroup = new THREE.Group();
   private particleGroup = new THREE.Group();
   private muzzle: THREE.PointLight;
@@ -75,7 +76,7 @@ export class GameScene3D {
     this.scene.add(this.playerParts.group);
 
     // Bullets + pickups + particles containers
-    this.scene.add(this.bulletGroup, this.pickupGroup, this.particleGroup);
+    this.scene.add(this.bulletGroup, this.enemyBulletGroup, this.pickupGroup, this.particleGroup);
 
     // Muzzle flash light (off by default)
     this.muzzle = new THREE.PointLight(0xffd070, 0, 18, 2);
@@ -175,6 +176,7 @@ export class GameScene3D {
 
     // === Bullets ===
     this.syncBullets(state, w, h, scale);
+    this.syncEnemyBullets(state, w, h, scale);
 
     // === Particles (muzzle, hit sparks, death bursts, blood) ===
     this.syncParticles(state, w, h, scale);
@@ -233,6 +235,40 @@ export class GameScene3D {
         m.position.set((b.x - w / 2) * scale, 1.3, (b.y - h / 2) * scale);
         // rotate the streak to match travel direction in the XZ plane
         m.rotation.y = Math.PI / 2 - Math.atan2(-b.vy, b.vx);
+      } else {
+        m.visible = false;
+      }
+    }
+  }
+
+  private enemyBulletPool: THREE.Mesh[] = [];
+  private syncEnemyBullets(state: GameState, w: number, h: number, scale: number) {
+    while (this.enemyBulletPool.length < state.enemyBullets.length) {
+      const m = new THREE.Mesh(
+        new THREE.CapsuleGeometry(0.12, 1.15, 3, 6),
+        new THREE.MeshStandardMaterial({ color: 0xff3355, emissive: 0xff0033, emissiveIntensity: 3 }),
+      );
+      m.rotation.z = Math.PI / 2;
+      this.enemyBulletGroup.add(m);
+      this.enemyBulletPool.push(m);
+    }
+    for (let i = 0; i < this.enemyBulletPool.length; i++) {
+      const m = this.enemyBulletPool[i];
+      if (i < state.enemyBullets.length) {
+        const b = state.enemyBullets[i];
+        m.visible = true;
+        m.position.set((b.x - w / 2) * scale, 1.2, (b.y - h / 2) * scale);
+        m.rotation.y = Math.PI / 2 - Math.atan2(-b.vy, b.vx);
+        const mat = m.material as THREE.MeshStandardMaterial;
+        if (b.source === 'boss') {
+          mat.color.setHex(0xff00ff);
+          mat.emissive.setHex(0xff00ff);
+          m.scale.setScalar(1.35);
+        } else {
+          mat.color.setHex(0xff3355);
+          mat.emissive.setHex(0xff0033);
+          m.scale.setScalar(1);
+        }
       } else {
         m.visible = false;
       }

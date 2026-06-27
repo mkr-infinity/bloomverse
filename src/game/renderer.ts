@@ -77,6 +77,17 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, w: numbe
   }
   ctx.shadowBlur = 0;
 
+  // Enemy bullets
+  ctx.fillStyle = '#ff3355';
+  ctx.shadowColor = '#ff3355';
+  ctx.shadowBlur = 10;
+  for (const b of state.enemyBullets) {
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.source === 'boss' ? 4 : 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+
   // Player character
   drawHumanCharacter(ctx, state.playerX, state.playerY, skin, 1, state.playerAngle, state.frame, state.isMoving);
 
