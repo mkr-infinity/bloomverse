@@ -78,6 +78,12 @@ export default function Settings() {
       </div>
 
       <div className={styles.content}>
+        <div className={styles.heroCard}>
+          <span className={styles.heroKicker}>BROWSER READY</span>
+          <h2>SET UP YOUR RUN</h2>
+          <p>Adjust audio, controls and save data. Everything is stored locally in this browser.</p>
+        </div>
+
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>AUDIO</h2>
           <div className={styles.option}>

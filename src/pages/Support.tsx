@@ -51,8 +51,8 @@ export default function Support() {
           <div className={styles.heroBadge}>
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ff5a72" strokeWidth="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z" /></svg>
           </div>
-          <h2 className={styles.heading}>JOIN THE FIGHT</h2>
-          <p className={styles.subtitle}>Help keep the multiverse alive</p>
+          <h2 className={styles.heading}>SUPPORT THE GAME</h2>
+          <p className={styles.subtitle}>Small browser game, built with care</p>
         </div>
 
         <div className={styles.links}>
@@ -68,6 +68,11 @@ export default function Support() {
               <span className={styles.arrow}>&#8250;</span>
             </a>
           ))}
+        </div>
+
+        <div className={styles.notePanel}>
+          <span className={styles.noteKicker}>THANK YOU</span>
+          <p>Bloomverse is designed to be simple, playable, offline-ready and saved locally in your browser. Support helps polish UI, fix bugs and improve future levels.</p>
         </div>
 
         <p className={styles.footer}>EVERY BIT OF SUPPORT PUSHES THE FRONT LINE FORWARD</p>

@@ -54,11 +54,16 @@ export default function MainMenu() {
             ))}
           </h1>
           <p className={styles.tagline}>SURVIVE &middot; FIGHT &middot; ESCAPE</p>
+          <div className={styles.bootMeta}>
+            <span>3D BROWSER BUILD</span>
+            <span>LOCAL SAVE</span>
+            <span>OFFLINE READY</span>
+          </div>
 
           <div className={styles.pressStart}>
             <div className={styles.tapBtn}>
               <span className={styles.tapPulse} />
-              <span className={styles.pressText}>TAP ANYWHERE TO START</span>
+              <span className={styles.pressText}>ENTER BLOOMVERSE</span>
             </div>
           </div>
           <p className={styles.studio}>MKR INFINITY PRESENTS</p>
@@ -69,8 +74,13 @@ export default function MainMenu() {
             <img src={logoSvg} alt="Bloomverse" className={styles.menuLogo} />
             <div>
               <h1 className={styles.menuTitle}>BLOOMVERSE</h1>
-              <p className={styles.menuSub}>SURVIVE &middot; FIGHT &middot; ESCAPE</p>
+              <p className={styles.menuSub}>3D BROWSER SURVIVAL &middot; SAVES LOCALLY</p>
             </div>
+          </div>
+          <div className={styles.statusStrip}>
+            <span>READY TO DEPLOY</span>
+            <span>NO LOGIN</span>
+            <span>INDEXEDDB SAVE</span>
           </div>
           <nav className={styles.nav}>
             {hasSave && (

@@ -123,6 +123,25 @@
   background: linear-gradient(90deg, transparent, rgba(255,50,60,0.14), transparent);
 }
 
+.bootMeta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.bootMeta span {
+  font-family: var(--font-display);
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.62);
+  padding: 5px 9px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.28);
+  backdrop-filter: blur(6px);
+}
+
 .pressStart {
   display: flex;
   flex-direction: column;
@@ -214,8 +233,25 @@
 .menuSub {
   font-family: var(--font-display);
   font-size: 9px;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
   color: var(--text-secondary);
+}
+
+.statusStrip {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 212, 255, 0.14);
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.07), transparent);
+}
+
+.statusStrip span {
+  font-family: var(--font-display);
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: rgba(166, 230, 255, 0.78);
 }
 
 .nav {

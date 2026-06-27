@@ -4,10 +4,10 @@ import ActionBackground from '../components/ActionBackground';
 import styles from './About.module.css';
 
 const FEATURES = [
-  { val: '∞', label: 'ENDLESS WAVES' },
-  { val: '6', label: 'WARZONES' },
-  { val: '5', label: 'ENEMY CLASSES' },
-  { val: '8', label: 'OPERATIVES' },
+  { val: '3D', label: 'BROWSER ACTION' },
+  { val: '∞', label: 'ENDLESS LEVELS' },
+  { val: '7', label: 'ARMORY GUNS' },
+  { val: '100%', label: 'LOCAL SAVE' },
 ];
 
 const ENEMIES = [
@@ -56,25 +56,23 @@ export default function About() {
         <section className={styles.panel}>
           <h3 className={styles.panelTitle}><span className={styles.bar} />MISSION BRIEFING</h3>
           <p className={styles.body}>
-            The barrier between worlds has shattered. Reality is bleeding into reality, and
-            from the cracks pours an endless tide of the infected. <strong>Bloomverse</strong> is
-            a fast, top-down action-survival shooter where you drop into collapsing dimensions
-            and hold the line against wave after wave of nightmares.
+            Bloomverse is a simple, fast browser-based 3D action survival game. No account,
+            no backend, no install required — just enter the arena, survive waves, earn coins,
+            and upgrade your loadout.
           </p>
           <p className={styles.body}>
-            There is no extraction. There is no safe zone. Every cleared wave drags you deeper
-            into the void — so you fight, you scavenge, and you adapt, knowing the next horde is
-            always bigger than the last.
+            Your progress is saved directly in this browser with IndexedDB. Continue your run,
+            export your save from Settings, or reset anytime — everything stays on your device.
           </p>
         </section>
 
         <section className={styles.panel}>
           <h3 className={styles.panelTitle}><span className={styles.bar} />HOW IT PLAYS</h3>
           <ul className={styles.list}>
-            <li><span className={styles.dot} /> Move with <b>WASD</b>, aim with the mouse, and fire to thin the horde.</li>
-            <li><span className={styles.dot} /> Survive every wave of a mission to clear it and bank <b>coins</b>.</li>
-            <li><span className={styles.dot} /> Spend coins in the <b>Armory</b> to unlock operatives, guns and gear.</li>
-            <li><span className={styles.dot} /> Push through six warzones — and then keep going, forever.</li>
+            <li><span className={styles.dot} /> Move with <b>WASD</b>, aim with the mouse, fire, reload and dash.</li>
+            <li><span className={styles.dot} /> Use cover, dodge hostile fire and clear every wave to earn <b>coins</b>.</li>
+            <li><span className={styles.dot} /> Spend coins in the <b>Armory</b> to unlock guns, gear and operatives.</li>
+            <li><span className={styles.dot} /> Runs entirely in the browser with local save and offline-ready PWA support.</li>
           </ul>
         </section>
 
