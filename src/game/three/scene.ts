@@ -3,6 +3,7 @@ import { GameState, LevelDef } from '../engine';
 import { CharacterSkin } from '../characters';
 import { getTheme, buildArena } from './world';
 import { createHumanoid, animateHumanoid, HumanoidParts, createZombieHumanoid, animateZombie } from './humanoid';
+import { createWeaponMesh } from './weapons3d';
 
 function skinToColors(skin: CharacterSkin) {
   const hex = (s: string) => parseInt(s.replace('#', ''), 16);
@@ -37,6 +38,7 @@ export class GameScene3D {
   private playerForward = new THREE.Vector3(0, 0, 1);
   private animPhase = 0;
   private aimMarker!: THREE.Mesh;
+  private currentWeaponKey = '';
 
   constructor(public canvas: HTMLCanvasElement, level: LevelDef, skin: CharacterSkin) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -124,6 +126,7 @@ export class GameScene3D {
     // Walk animation phase
     this.animPhase += dt * (state.isMoving ? 9 : 3);
     animateHumanoid(this.playerParts, this.animPhase, state.isMoving);
+    this.syncPlayerWeapon(state);
 
     // Muzzle flash when firing
     const firing = state.particles.some((p) => p.color === '#ffff00' && p.life > 2);
@@ -203,6 +206,15 @@ export class GameScene3D {
     const lerp = 1 - Math.pow(0.001, dt); // frame-rate independent smoothing
     this.camera.position.lerp(this.camTargetPos, lerp);
     this.camera.lookAt(this.camTargetLook);
+  }
+
+  private syncPlayerWeapon(state: GameState) {
+    const key = `${state.weaponId}:${state.weaponType}:${state.weaponAccent}`;
+    if (key === this.currentWeaponKey) return;
+    this.currentWeaponKey = key;
+    this.playerParts.weaponMount.clear();
+    const weapon = createWeaponMesh(state.weaponType, state.weaponAccent);
+    this.playerParts.weaponMount.add(weapon);
   }
 
   private animateAtmosphere(dt: number) {

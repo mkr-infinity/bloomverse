@@ -10,6 +10,7 @@ export interface HumanoidParts {
   legR: THREE.Object3D;
   armL: THREE.Object3D;
   armR: THREE.Object3D;
+  weaponMount: THREE.Object3D;
   torso: THREE.Object3D;
   head: THREE.Object3D;
 }
@@ -97,14 +98,15 @@ export function createHumanoid(colors: HumanoidColors): HumanoidParts {
   hairCap.position.set(0, 2.24, 0);
   group.add(neck, head, hairCap);
 
-  // Gun held forward (+Z), attached to right arm pivot
-  const gun = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.12, 0.45), accent);
-  gun.position.set(0.06, -0.5, 0.2);
-  armR.add(gun);
+  // Weapon mount held forward (+Z), attached to right arm pivot. The scene
+  // swaps weapon-specific meshes into this group based on equipped loadout.
+  const weaponMount = new THREE.Group();
+  weaponMount.position.set(0.06, -0.5, 0.2);
+  armR.add(weaponMount);
 
   group.traverse((o) => { if ((o as THREE.Mesh).isMesh) o.castShadow = true; });
 
-  return { group, legL, legR, armL, armR, torso, head };
+  return { group, legL, legR, armL, armR, weaponMount, torso, head };
 }
 
 // Drive a walk/idle pose. phase advances with time; moving toggles stride.

@@ -62,6 +62,9 @@ export function getWeapon(id: string): WeaponDef {
 }
 
 export interface Loadout {
+  weaponId: string;
+  weaponType: WeaponDef['type'];
+  weaponAccent: string;
   damage: number;
   fireCooldown: number;
   pellets: number;
@@ -85,5 +88,5 @@ export function buildLoadout(weaponId: string, ownedGear: string[]): Loadout {
     if (g.ammoMult) maxAmmo = Math.round(maxAmmo * g.ammoMult);
     if (g.damageMult) damage = Math.round(damage * g.damageMult);
   }
-  return { damage, fireCooldown: w.fireCooldown, pellets: w.pellets, maxAmmo, reloadDuration: w.reloadFrames, bonusHealth, bonusArmor };
+  return { weaponId: w.id, weaponType: w.type, weaponAccent: w.accent, damage, fireCooldown: w.fireCooldown, pellets: w.pellets, maxAmmo, reloadDuration: w.reloadFrames, bonusHealth, bonusArmor };
 }

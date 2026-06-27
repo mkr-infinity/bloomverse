@@ -73,6 +73,9 @@ export interface GameState {
   lastShot: number; // frame of the last fired shot (per-shot cooldown)
   reloadTimer: number; // frames remaining until ammo refills
   reloadDuration: number;
+  weaponId: string;
+  weaponType: string;
+  weaponAccent: string;
   weaponDamage: number;
   fireCooldown: number;
   pellets: number;
@@ -254,6 +257,9 @@ export interface GameLoadout {
   pellets: number;
   maxAmmo: number;
   reloadDuration?: number;
+  weaponId?: string;
+  weaponType?: string;
+  weaponAccent?: string;
   bonusHealth: number;
   bonusArmor: number;
 }
@@ -274,6 +280,7 @@ export function createGameState(w: number, h: number, level: LevelDef, loadout?:
     isMoving: false, waveComplete: false, levelComplete: false,
     gameOver: false, paused: false, kills: 0, waveAnnounce: 90, lastShot: -100,
     reloadTimer: 0, reloadDuration: lo.reloadDuration || 70,
+    weaponId: lo.weaponId || 'pistol', weaponType: lo.weaponType || 'pistol', weaponAccent: lo.weaponAccent || '#9aa7b5',
     weaponDamage: lo.damage, fireCooldown: lo.fireCooldown, pellets: lo.pellets,
   };
 }
