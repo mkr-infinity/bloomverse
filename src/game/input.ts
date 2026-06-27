@@ -1,3 +1,5 @@
+import { getControlBindings, isActionKey } from './controls';
+
 export interface Input {
   up: boolean; down: boolean; left: boolean; right: boolean;
   shoot: boolean; reload: boolean;
@@ -6,24 +8,25 @@ export interface Input {
 
 export function createInput(canvas: HTMLCanvasElement) {
   const state: Input = { up: false, down: false, left: false, right: false, shoot: false, reload: false, mouseX: canvas.width / 2, mouseY: canvas.height / 2 - 120 };
+  const bindings = getControlBindings();
   let touchJoystickId: number | null = null;
   let touchJoystickStart = { x: 0, y: 0 };
 
   const keyDown = (e: KeyboardEvent) => {
-    if (e.code === 'KeyW' || e.code === 'ArrowUp') state.up = true;
-    if (e.code === 'KeyS' || e.code === 'ArrowDown') state.down = true;
-    if (e.code === 'KeyA' || e.code === 'ArrowLeft') state.left = true;
-    if (e.code === 'KeyD' || e.code === 'ArrowRight') state.right = true;
-    if (e.code === 'KeyR') state.reload = true;
-    if (e.code === 'Space') { state.shoot = true; e.preventDefault(); }
+    if (isActionKey(bindings, 'up', e.code)) state.up = true;
+    if (isActionKey(bindings, 'down', e.code)) state.down = true;
+    if (isActionKey(bindings, 'left', e.code)) state.left = true;
+    if (isActionKey(bindings, 'right', e.code)) state.right = true;
+    if (isActionKey(bindings, 'reload', e.code)) state.reload = true;
+    if (isActionKey(bindings, 'shoot', e.code)) { state.shoot = true; e.preventDefault(); }
   };
   const keyUp = (e: KeyboardEvent) => {
-    if (e.code === 'KeyW' || e.code === 'ArrowUp') state.up = false;
-    if (e.code === 'KeyS' || e.code === 'ArrowDown') state.down = false;
-    if (e.code === 'KeyA' || e.code === 'ArrowLeft') state.left = false;
-    if (e.code === 'KeyD' || e.code === 'ArrowRight') state.right = false;
-    if (e.code === 'KeyR') state.reload = false;
-    if (e.code === 'Space') state.shoot = false;
+    if (isActionKey(bindings, 'up', e.code)) state.up = false;
+    if (isActionKey(bindings, 'down', e.code)) state.down = false;
+    if (isActionKey(bindings, 'left', e.code)) state.left = false;
+    if (isActionKey(bindings, 'right', e.code)) state.right = false;
+    if (isActionKey(bindings, 'reload', e.code)) state.reload = false;
+    if (isActionKey(bindings, 'shoot', e.code)) state.shoot = false;
   };
   const mouseMove = (e: MouseEvent) => { const r = canvas.getBoundingClientRect(); state.mouseX = e.clientX - r.left; state.mouseY = e.clientY - r.top; };
   const mouseDown = (e: MouseEvent) => { if (e.button === 0) { state.shoot = true; e.preventDefault(); } };

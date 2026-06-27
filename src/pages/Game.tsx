@@ -7,6 +7,7 @@ import { GameScene3D } from '../game/three/scene';
 import { createInput } from '../game/input';
 import { CHARACTERS } from '../game/characters';
 import { buildLoadout } from '../game/weapons';
+import { getControlBindings, isActionKey } from '../game/controls';
 import Tutorial from '../components/Tutorial';
 import CoinIcon from '../components/CoinIcon';
 import styles from './Game.module.css';
@@ -133,7 +134,8 @@ export default function Game() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.code === 'Escape') {
+      const bindings = getControlBindings();
+      if (isActionKey(bindings, 'pause', e.code)) {
         if (overlay === 'none') { setOverlay('pause'); if (stateRef.current) stateRef.current.paused = true; }
         else if (overlay === 'pause') { setOverlay('none'); if (stateRef.current) stateRef.current.paused = false; }
       }

@@ -1,12 +1,15 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { exportAllData, importAllData, resetAllData } from '../utils/db';
+import { CONTROL_ACTIONS, ControlAction, formatBinding, formatKey, getControlBindings, resetControlBindings, saveControlBindings, setPrimaryBinding } from '../game/controls';
 import styles from './Settings.module.css';
 
 export default function Settings() {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState('');
+  const [bindings, setBindings] = useState(getControlBindings);
+  const [listeningFor, setListeningFor] = useState<ControlAction | null>(null);
 
   const [settings, setSettings] = useState({
     sfxVolume: 80,
@@ -46,6 +49,23 @@ export default function Settings() {
       await resetAllData();
       setMsg('Game data reset.');
     }
+  };
+
+  const captureBinding = (action: ControlAction) => (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (!listeningFor) return;
+    e.preventDefault();
+    const next = setPrimaryBinding(bindings, action, e.code);
+    setBindings(next);
+    saveControlBindings(next);
+    setListeningFor(null);
+    setMsg(`${CONTROL_ACTIONS.find((a) => a.action === action)?.label} set to ${formatKey(e.code)}.`);
+  };
+
+  const resetBindings = () => {
+    const next = resetControlBindings();
+    setBindings(next);
+    setListeningFor(null);
+    setMsg('Controls reset to default.');
   };
 
   return (
@@ -127,14 +147,25 @@ export default function Settings() {
 
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>CONTROLS</h2>
+          <p className={styles.controlHelp}>Click a binding, then press the desktop key you want. Mouse aim and left-click shooting always remain enabled.</p>
           <div className={styles.controls}>
-            <div className={styles.control}><span>Move</span><span>W A S D / Arrows</span></div>
-            <div className={styles.control}><span>Aim</span><span>Mouse</span></div>
-            <div className={styles.control}><span>Shoot</span><span>Left Click</span></div>
-            <div className={styles.control}><span>Reload</span><span>R</span></div>
-            <div className={styles.control}><span>Switch Weapon</span><span>1-9</span></div>
-            <div className={styles.control}><span>Pause</span><span>ESC</span></div>
+            {CONTROL_ACTIONS.map(({ action, label, hint }) => (
+              <div className={styles.control} key={action}>
+                <div>
+                  <span>{label}</span>
+                  <small>{hint}</small>
+                </div>
+                <button
+                  className={`${styles.keyBind} ${listeningFor === action ? styles.listening : ''}`}
+                  onClick={() => setListeningFor(action)}
+                  onKeyDown={captureBinding(action)}
+                >
+                  {listeningFor === action ? 'PRESS KEY...' : formatBinding(bindings[action])}
+                </button>
+              </div>
+            ))}
           </div>
+          <button className={styles.resetControls} onClick={resetBindings}>RESET DEFAULT CONTROLS</button>
         </section>
       </div>
     </div>

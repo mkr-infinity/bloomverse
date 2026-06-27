@@ -188,28 +188,76 @@
   margin-top: 6px;
 }
 
+.controlHelp {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .controls {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .control {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  gap: 14px;
+  padding: 10px 12px;
   background: rgba(255, 255, 255, 0.02);
-  border-radius: 3px;
+  border-radius: 6px;
   font-size: 13px;
 }
 
-.control span:first-child {
-  color: var(--text-secondary);
+.control div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.control span:last-child {
-  font-family: var(--font-display);
-  font-size: 11px;
+.control span {
   color: var(--text-primary);
+}
+
+.control small {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.keyBind {
+  min-width: 150px;
+  padding: 8px 12px;
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  border-radius: 6px;
+  color: var(--text-primary);
+  background: rgba(0, 212, 255, 0.06);
+  font-family: var(--font-display);
+  font-size: 10px;
   letter-spacing: 1px;
+  text-align: center;
+}
+
+.keyBind.listening {
+  color: #ffd700;
+  border-color: rgba(255, 215, 0, 0.6);
+  background: rgba(255, 215, 0, 0.1);
+  animation: pulse 0.9s ease-in-out infinite;
+}
+
+.resetControls {
+  align-self: flex-start;
+  padding: 9px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
 }
