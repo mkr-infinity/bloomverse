@@ -2,12 +2,12 @@ import { getControlBindings, isActionKey } from './controls';
 
 export interface Input {
   up: boolean; down: boolean; left: boolean; right: boolean;
-  shoot: boolean; reload: boolean;
+  shoot: boolean; reload: boolean; ability: boolean;
   mouseX: number; mouseY: number;
 }
 
 export function createInput(canvas: HTMLCanvasElement) {
-  const state: Input = { up: false, down: false, left: false, right: false, shoot: false, reload: false, mouseX: canvas.width / 2, mouseY: canvas.height / 2 - 120 };
+  const state: Input = { up: false, down: false, left: false, right: false, shoot: false, reload: false, ability: false, mouseX: canvas.width / 2, mouseY: canvas.height / 2 - 120 };
   const bindings = getControlBindings();
   let touchJoystickId: number | null = null;
   let touchJoystickStart = { x: 0, y: 0 };
@@ -18,6 +18,7 @@ export function createInput(canvas: HTMLCanvasElement) {
     if (isActionKey(bindings, 'left', e.code)) state.left = true;
     if (isActionKey(bindings, 'right', e.code)) state.right = true;
     if (isActionKey(bindings, 'reload', e.code)) state.reload = true;
+    if (isActionKey(bindings, 'ability', e.code)) { state.ability = true; e.preventDefault(); }
     if (isActionKey(bindings, 'shoot', e.code)) { state.shoot = true; e.preventDefault(); }
   };
   const keyUp = (e: KeyboardEvent) => {
@@ -26,6 +27,7 @@ export function createInput(canvas: HTMLCanvasElement) {
     if (isActionKey(bindings, 'left', e.code)) state.left = false;
     if (isActionKey(bindings, 'right', e.code)) state.right = false;
     if (isActionKey(bindings, 'reload', e.code)) state.reload = false;
+    if (isActionKey(bindings, 'ability', e.code)) state.ability = false;
     if (isActionKey(bindings, 'shoot', e.code)) state.shoot = false;
   };
   const mouseMove = (e: MouseEvent) => { const r = canvas.getBoundingClientRect(); state.mouseX = e.clientX - r.left; state.mouseY = e.clientY - r.top; };

@@ -77,6 +77,10 @@ export interface GameState {
   lastShot: number; // frame of the last fired shot (per-shot cooldown)
   reloadTimer: number; // frames remaining until ammo refills
   reloadDuration: number;
+  abilityCooldown: number;
+  abilityCooldownMax: number;
+  abilityActive: number;
+  lastAbility: number;
   weaponId: string;
   weaponType: string;
   weaponAccent: string;
@@ -318,6 +322,7 @@ export function createGameState(w: number, h: number, level: LevelDef, loadout?:
     isMoving: false, waveComplete: false, levelComplete: false,
     gameOver: false, paused: false, kills: 0, waveAnnounce: 90, lastShot: -100,
     reloadTimer: 0, reloadDuration: lo.reloadDuration || 70,
+    abilityCooldown: 0, abilityCooldownMax: 180, abilityActive: 0, lastAbility: -999,
     weaponId: lo.weaponId || 'pistol', weaponType: lo.weaponType || 'pistol', weaponAccent: lo.weaponAccent || '#9aa7b5',
     weaponDamage: lo.damage, fireCooldown: lo.fireCooldown, pellets: lo.pellets,
   };
@@ -338,7 +343,7 @@ export function spawnEnemy(type: Enemy['type'], w: number, h: number, levelId: n
   return { x, y, type, health: hp, maxHealth: hp, speed: stats.speed, damage: stats.damage, lastAttack: 0, lastShot: -120, coverX: 0, coverY: 0, coverUntil: 0, lastCoverPick: -120, frame: Math.random() * 100 };
 }
 
-export function tick(state: GameState, input: { up: boolean; down: boolean; left: boolean; right: boolean; mouseX: number; mouseY: number; shoot: boolean; reload: boolean }, w: number, h: number, level: LevelDef): GameState {
+export function tick(state: GameState, input: { up: boolean; down: boolean; left: boolean; right: boolean; mouseX: number; mouseY: number; shoot: boolean; reload: boolean; ability?: boolean }, w: number, h: number, level: LevelDef): GameState {
   if (state.paused || state.gameOver || state.levelComplete) return state;
   const s = { ...state, enemies: [...state.enemies], bullets: [...state.bullets], enemyBullets: [...state.enemyBullets], pickups: [...state.pickups], cover: [...state.cover], particles: [...state.particles] };
   s.frame++;
@@ -357,6 +362,36 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
   if (!isBlocked(nextPlayerX, s.playerY, 18, s.cover)) s.playerX = nextPlayerX;
   if (!isBlocked(s.playerX, nextPlayerY, 18, s.cover)) s.playerY = nextPlayerY;
   s.playerAngle = Math.atan2(input.mouseY - s.playerY, input.mouseX - s.playerX);
+
+  // Active ability: short combat dash toward movement input (or aim direction)
+  // with a cooldown. Dash can be used to dodge enemy fire or reposition to cover.
+  if (s.abilityCooldown > 0) s.abilityCooldown--;
+  if (s.abilityActive > 0) s.abilityActive--;
+  if (input.ability && s.abilityCooldown <= 0 && s.frame - s.lastAbility > 18) {
+    const dashLen = 78;
+    const dashDx = dx !== 0 || dy !== 0 ? dx / len : Math.cos(s.playerAngle);
+    const dashDy = dx !== 0 || dy !== 0 ? dy / len : Math.sin(s.playerAngle);
+    let targetX = Math.max(20, Math.min(w - 20, s.playerX + dashDx * dashLen));
+    let targetY = Math.max(20, Math.min(h - 20, s.playerY + dashDy * dashLen));
+    // If full dash lands inside cover, shrink it until a safe point is found.
+    for (let t = 0.8; isBlocked(targetX, targetY, 18, s.cover) && t > 0.2; t -= 0.2) {
+      targetX = Math.max(20, Math.min(w - 20, s.playerX + dashDx * dashLen * t));
+      targetY = Math.max(20, Math.min(h - 20, s.playerY + dashDy * dashLen * t));
+    }
+    if (!isBlocked(targetX, targetY, 18, s.cover)) {
+      const sx = s.playerX, sy = s.playerY;
+      s.playerX = targetX;
+      s.playerY = targetY;
+      s.abilityActive = 18;
+      s.screenShake = Math.max(s.screenShake, 5);
+      for (let p = 0; p < 14; p++) {
+        const t = p / 13;
+        s.particles.push({ x: sx + (targetX - sx) * t, y: sy + (targetY - sy) * t, vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5, life: 20, color: '#00d4ff', size: 3 });
+      }
+    }
+    s.abilityCooldown = s.abilityCooldownMax;
+    s.lastAbility = s.frame;
+  }
 
   // Reload countdown. Ammo refills only when the timer completes; shooting is
   // blocked while reloading so reload becomes a tactical combat window.

@@ -541,6 +541,25 @@ function drawHUD(ctx: CanvasRenderingContext2D, state: GameState, w: number, h: 
   ctx.font = '10px Orbitron, monospace';
   ctx.fillText(`${state.enemies.length} ENEMIES`, w - 18, 24);
 
+  // Ability - bottom center above minimap
+  const abX = w / 2 - 58;
+  const abY = h - 112;
+  const ready = state.abilityCooldown <= 0;
+  const cdPct = 1 - Math.min(1, state.abilityCooldown / state.abilityCooldownMax);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = ready ? 'rgba(0, 212, 255, 0.16)' : 'rgba(0,0,0,0.55)';
+  fillRoundRect(ctx, abX, abY, 116, 28, 6);
+  ctx.strokeStyle = ready ? 'rgba(0, 212, 255, 0.7)' : 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(abX + 1, abY + 1, 114, 26);
+  ctx.fillStyle = '#111827';
+  ctx.fillRect(abX + 8, abY + 20, 100, 4);
+  ctx.fillStyle = ready ? '#00d4ff' : '#666';
+  ctx.fillRect(abX + 8, abY + 20, 100 * cdPct, 4);
+  ctx.fillStyle = ready ? '#00d4ff' : '#aaa';
+  ctx.font = 'bold 10px Orbitron, monospace';
+  ctx.fillText(ready ? '[SHIFT] DASH READY' : `DASH ${Math.ceil(state.abilityCooldown / 60)}s`, w / 2, abY + 13);
+
   // Minimap - bottom center
   drawMinimap(ctx, state, w, h);
 }

@@ -1,4 +1,4 @@
-export type ControlAction = 'up' | 'down' | 'left' | 'right' | 'shoot' | 'reload' | 'pause';
+export type ControlAction = 'up' | 'down' | 'left' | 'right' | 'shoot' | 'reload' | 'ability' | 'pause';
 
 export type ControlBindings = Record<ControlAction, string[]>;
 
@@ -9,6 +9,7 @@ export const CONTROL_ACTIONS: { action: ControlAction; label: string; hint: stri
   { action: 'right', label: 'Move Right', hint: 'Strafe right' },
   { action: 'shoot', label: 'Shoot', hint: 'Keyboard fire; mouse still works' },
   { action: 'reload', label: 'Reload', hint: 'Refill current weapon' },
+  { action: 'ability', label: 'Ability', hint: 'Combat dash / active skill' },
   { action: 'pause', label: 'Pause', hint: 'Open pause menu' },
 ];
 
@@ -19,6 +20,7 @@ export const DEFAULT_BINDINGS: ControlBindings = {
   right: ['KeyD', 'ArrowRight'],
   shoot: ['Space'],
   reload: ['KeyR'],
+  ability: ['ShiftLeft', 'ShiftRight'],
   pause: ['Escape'],
 };
 
@@ -36,6 +38,7 @@ export function getControlBindings(): ControlBindings {
       right: normalize(parsed.right, DEFAULT_BINDINGS.right),
       shoot: normalize(parsed.shoot, DEFAULT_BINDINGS.shoot),
       reload: normalize(parsed.reload, DEFAULT_BINDINGS.reload),
+      ability: normalize(parsed.ability, DEFAULT_BINDINGS.ability),
       pause: normalize(parsed.pause, DEFAULT_BINDINGS.pause),
     };
   } catch {
@@ -93,6 +96,7 @@ function cloneBindings(bindings: ControlBindings): ControlBindings {
     right: [...bindings.right],
     shoot: [...bindings.shoot],
     reload: [...bindings.reload],
+    ability: [...bindings.ability],
     pause: [...bindings.pause],
   };
 }
