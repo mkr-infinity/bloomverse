@@ -30,6 +30,7 @@ export class GameScene3D {
   private enemyViews = new Map<Enemy_id, EnemyView>();
   private bulletGroup = new THREE.Group();
   private enemyBulletGroup = new THREE.Group();
+  private coverGroup = new THREE.Group();
   private pickupGroup = new THREE.Group();
   private particleGroup = new THREE.Group();
   private muzzle: THREE.PointLight;
@@ -76,7 +77,7 @@ export class GameScene3D {
     this.scene.add(this.playerParts.group);
 
     // Bullets + pickups + particles containers
-    this.scene.add(this.bulletGroup, this.enemyBulletGroup, this.pickupGroup, this.particleGroup);
+    this.scene.add(this.bulletGroup, this.enemyBulletGroup, this.coverGroup, this.pickupGroup, this.particleGroup);
 
     // Muzzle flash light (off by default)
     this.muzzle = new THREE.PointLight(0xffd070, 0, 18, 2);
@@ -134,6 +135,9 @@ export class GameScene3D {
     this.aimMarker.position.set(aimWorld.x, 0.05, aimWorld.z);
     const pulse = 0.5 + Math.sin(this.animPhase * 3) * 0.2;
     (this.aimMarker.material as THREE.MeshBasicMaterial).opacity = pulse;
+
+    // === Cover / obstacles ===
+    this.syncCover(state, w, h, scale);
 
     // === Enemies: sync by reference id stored on the enemy object ===
     const seen = new Set<Enemy_id>();
@@ -212,6 +216,36 @@ export class GameScene3D {
         o.position.y += Math.sin(this.animPhase + o.userData.swirl) * 0.004;
       }
     });
+  }
+
+  private coverPool: THREE.Mesh[] = [];
+  private syncCover(state: GameState, w: number, h: number, scale: number) {
+    const colorFor = (type: string) => type === 'container' ? 0x36465c : type === 'rock' ? 0x6a5a45 : type === 'crystal' ? 0x8ddcff : type === 'pillar' ? 0x3a1a12 : 0x2a3440;
+    while (this.coverPool.length < state.cover.length) {
+      const m = new THREE.Mesh(
+        new THREE.BoxGeometry(1, 1, 1),
+        new THREE.MeshStandardMaterial({ color: 0x2a3440, roughness: 0.8 }),
+      );
+      m.castShadow = true;
+      m.receiveShadow = true;
+      this.coverGroup.add(m);
+      this.coverPool.push(m);
+    }
+    for (let i = 0; i < this.coverPool.length; i++) {
+      const m = this.coverPool[i];
+      if (i < state.cover.length) {
+        const c = state.cover[i];
+        m.visible = true;
+        m.position.set((c.x - w / 2) * scale, 1.2, (c.y - h / 2) * scale);
+        m.scale.set(c.w * scale, c.type === 'crystal' ? 3.4 : c.type === 'pillar' ? 4.6 : 2.4, c.h * scale);
+        const mat = m.material as THREE.MeshStandardMaterial;
+        mat.color.setHex(colorFor(c.type));
+        mat.emissive.setHex(c.type === 'crystal' ? 0x235577 : c.type === 'pillar' ? 0x331000 : 0x000000);
+        mat.emissiveIntensity = c.type === 'crystal' ? 0.5 : c.type === 'pillar' ? 0.35 : 0;
+      } else {
+        m.visible = false;
+      }
+    }
   }
 
   private bulletPool: THREE.Mesh[] = [];

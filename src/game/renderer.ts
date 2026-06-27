@@ -39,6 +39,18 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, w: numbe
   }
   ctx.restore();
 
+  // Cover / obstacles
+  for (const c of state.cover) {
+    const color = c.type === 'container' ? '#36465c' : c.type === 'rock' ? '#6a5a45' : c.type === 'crystal' ? '#8ddcff' : c.type === 'pillar' ? '#3a1a12' : '#2a3440';
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillRect(c.x - c.w / 2 + 5, c.y - c.h / 2 + 7, c.w, c.h);
+    ctx.fillStyle = color;
+    ctx.fillRect(c.x - c.w / 2, c.y - c.h / 2, c.w, c.h);
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(c.x - c.w / 2, c.y - c.h / 2, c.w, c.h);
+  }
+
   // Pickups
   for (const p of state.pickups) {
     const pulse = 0.8 + Math.sin(state.frame * 0.08) * 0.2;

@@ -31,6 +31,12 @@ export interface Pickup {
   value: number;
 }
 
+export interface Cover {
+  x: number; y: number;
+  w: number; h: number;
+  type: 'barrier' | 'container' | 'rock' | 'crystal' | 'pillar';
+}
+
 export interface Particle {
   x: number; y: number;
   vx: number; vy: number;
@@ -50,6 +56,7 @@ export interface GameState {
   bullets: Bullet[];
   enemyBullets: EnemyBullet[];
   pickups: Pickup[];
+  cover: Cover[];
   particles: Particle[];
   enemiesSpawned: number;
   enemiesInWave: number;
@@ -195,6 +202,42 @@ export function getLevelInfo(id: number): LevelInfo {
   return { hasBoss, enemyCount, waves: lvl.waves.length, reward, difficulty };
 }
 
+function seeded(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+export function getLevelCover(level: LevelDef, w: number, h: number): Cover[] {
+  const rand = seeded(level.id * 7919 + level.world.length * 97);
+  const covers: Cover[] = [];
+  const typeForWorld: Record<string, Cover['type']> = {
+    city: 'container', desert: 'rock', frozen: 'crystal', burning: 'pillar', sky: 'barrier', void: 'pillar',
+  };
+  const count = level.world === 'city' ? 9 : level.world === 'frozen' ? 10 : 8;
+  for (let i = 0; i < count; i++) {
+    const cw = level.world === 'city' ? 54 + rand() * 34 : 34 + rand() * 36;
+    const ch = level.world === 'city' ? 32 + rand() * 24 : 30 + rand() * 34;
+    const x = 70 + rand() * (w - 140);
+    const y = 70 + rand() * (h - 140);
+    if (Math.hypot(x - w / 2, y - h / 2) < 120) continue;
+    covers.push({ x, y, w: cw, h: ch, type: typeForWorld[level.world] || 'barrier' });
+  }
+  return covers;
+}
+
+function overlapsCover(x: number, y: number, radius: number, cover: Cover) {
+  const cx = Math.max(cover.x - cover.w / 2, Math.min(x, cover.x + cover.w / 2));
+  const cy = Math.max(cover.y - cover.h / 2, Math.min(y, cover.y + cover.h / 2));
+  return (x - cx) ** 2 + (y - cy) ** 2 < radius ** 2;
+}
+
+function isBlocked(x: number, y: number, radius: number, cover: Cover[]) {
+  return cover.some((c) => overlapsCover(x, y, radius, c));
+}
+
 const ENEMY_STATS: Record<Enemy['type'], { health: number; speed: number; damage: number }> = {
   walker: { health: 40, speed: 0.8, damage: 8 },
   runner: { health: 25, speed: 2.0, damage: 12 },
@@ -216,12 +259,13 @@ export function createGameState(w: number, h: number, level: LevelDef, loadout?:
   const totalEnemies = level.waves.flat().reduce((s, e) => s + e.count, 0);
   const lo: GameLoadout = loadout || { damage: 20, fireCooldown: 8, pellets: 1, maxAmmo: 50, bonusHealth: 0, bonusArmor: 0 };
   const maxHealth = 100 + lo.bonusHealth;
+  const cover = getLevelCover(level, w, h);
   return {
     playerX: w / 2, playerY: h / 2, playerAngle: 0,
     playerHealth: maxHealth, playerMaxHealth: maxHealth, playerArmor: lo.bonusArmor,
     ammo: lo.maxAmmo, maxAmmo: lo.maxAmmo, score: 0,
     wave: 0, totalWaves: level.waves.length,
-    enemies: [], bullets: [], enemyBullets: [], pickups: [], particles: [],
+    enemies: [], bullets: [], enemyBullets: [], pickups: [], cover, particles: [],
     enemiesSpawned: 0, enemiesInWave: totalEnemies,
     spawnTimer: 60, screenShake: 0, frame: 0,
     isMoving: false, waveComplete: false, levelComplete: false,
@@ -247,7 +291,7 @@ export function spawnEnemy(type: Enemy['type'], w: number, h: number, levelId: n
 
 export function tick(state: GameState, input: { up: boolean; down: boolean; left: boolean; right: boolean; mouseX: number; mouseY: number; shoot: boolean; reload: boolean }, w: number, h: number, level: LevelDef): GameState {
   if (state.paused || state.gameOver || state.levelComplete) return state;
-  const s = { ...state, enemies: [...state.enemies], bullets: [...state.bullets], enemyBullets: [...state.enemyBullets], pickups: [...state.pickups], particles: [...state.particles] };
+  const s = { ...state, enemies: [...state.enemies], bullets: [...state.bullets], enemyBullets: [...state.enemyBullets], pickups: [...state.pickups], cover: [...state.cover], particles: [...state.particles] };
   s.frame++;
 
   // Player movement with acceleration
@@ -259,8 +303,10 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
   if (input.right) dx += 1;
   const len = Math.sqrt(dx * dx + dy * dy) || 1;
   s.isMoving = dx !== 0 || dy !== 0;
-  s.playerX = Math.max(20, Math.min(w - 20, s.playerX + (dx / len) * speed));
-  s.playerY = Math.max(20, Math.min(h - 20, s.playerY + (dy / len) * speed));
+  const nextPlayerX = Math.max(20, Math.min(w - 20, s.playerX + (dx / len) * speed));
+  const nextPlayerY = Math.max(20, Math.min(h - 20, s.playerY + (dy / len) * speed));
+  if (!isBlocked(nextPlayerX, s.playerY, 18, s.cover)) s.playerX = nextPlayerX;
+  if (!isBlocked(s.playerX, nextPlayerY, 18, s.cover)) s.playerY = nextPlayerY;
   s.playerAngle = Math.atan2(input.mouseY - s.playerY, input.mouseX - s.playerX);
 
   // Shooting — fire-rate is a per-shot cooldown (not a global frame modulo),
@@ -341,8 +387,11 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
       // Random zigzag for non-tanks. Ranged enemies kite once inside their ideal range.
       const wobble = e.type === 'runner' ? Math.sin(e.frame * 0.1) * 0.5 : 0;
       const dir = ranged && dist < preferredRange ? -0.35 : 1;
-      e.x += (edx / dist) * e.speed * dir + wobble;
-      e.y += (edy / dist) * e.speed * dir;
+      const nx = e.x + (edx / dist) * e.speed * dir + wobble;
+      const ny = e.y + (edy / dist) * e.speed * dir;
+      const enemyRadius = e.type === 'boss' ? 34 : e.type === 'tank' ? 26 : 18;
+      if (!isBlocked(nx, e.y, enemyRadius, s.cover)) e.x = nx;
+      if (!isBlocked(e.x, ny, enemyRadius, s.cover)) e.y = ny;
     }
 
     // Ranged enemies shoot at the player. This turns the horde into real shooter
@@ -395,6 +444,13 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
       s.bullets.splice(i, 1);
       continue;
     }
+    if (isBlocked(b.x, b.y, 4, s.cover)) {
+      s.bullets.splice(i, 1);
+      for (let p = 0; p < 3; p++) {
+        s.particles.push({ x: b.x, y: b.y, vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, life: 14, color: '#b8c1cc', size: 2 });
+      }
+      continue;
+    }
     // Hit enemies
     for (let j = s.enemies.length - 1; j >= 0; j--) {
       const e = s.enemies[j];
@@ -442,6 +498,13 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
     b.life--;
     if (b.life <= 0 || b.x < -20 || b.x > w + 20 || b.y < -20 || b.y > h + 20) {
       s.enemyBullets.splice(i, 1);
+      continue;
+    }
+    if (isBlocked(b.x, b.y, 4, s.cover)) {
+      s.enemyBullets.splice(i, 1);
+      for (let p = 0; p < 3; p++) {
+        s.particles.push({ x: b.x, y: b.y, vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, life: 14, color: '#ff6677', size: 2 });
+      }
       continue;
     }
     if (Math.abs(b.x - s.playerX) < 18 && Math.abs(b.y - s.playerY) < 18) {
