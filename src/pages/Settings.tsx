@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { exportAllData, importAllData, resetAllData } from '../utils/db';
 import { CONTROL_ACTIONS, ControlAction, formatBinding, formatKey, getControlBindings, resetControlBindings, saveControlBindings, setPrimaryBinding } from '../game/controls';
+import { getAudioSettings, saveAudioSettings } from '../game/audio';
 import styles from './Settings.module.css';
 
 export default function Settings() {
@@ -11,14 +12,13 @@ export default function Settings() {
   const [bindings, setBindings] = useState(getControlBindings);
   const [listeningFor, setListeningFor] = useState<ControlAction | null>(null);
 
-  const [settings, setSettings] = useState({
-    sfxVolume: 80,
-    musicVolume: 60,
+  const [settings, setSettings] = useState(() => ({
+    ...getAudioSettings(),
     particles: true,
     screenShake: true,
     showFPS: false,
     difficulty: 'normal' as 'easy' | 'normal' | 'hard',
-  });
+  }));
 
   const handleExport = async () => {
     const data = await exportAllData();
@@ -83,13 +83,21 @@ export default function Settings() {
           <div className={styles.option}>
             <label>SFX Volume</label>
             <input type="range" min="0" max="100" value={settings.sfxVolume}
-              onChange={(e) => setSettings({ ...settings, sfxVolume: +e.target.value })} />
+              onChange={(e) => {
+                const next = { ...settings, sfxVolume: +e.target.value };
+                setSettings(next);
+                saveAudioSettings({ sfxVolume: next.sfxVolume, musicVolume: next.musicVolume });
+              }} />
             <span>{settings.sfxVolume}%</span>
           </div>
           <div className={styles.option}>
             <label>Music Volume</label>
             <input type="range" min="0" max="100" value={settings.musicVolume}
-              onChange={(e) => setSettings({ ...settings, musicVolume: +e.target.value })} />
+              onChange={(e) => {
+                const next = { ...settings, musicVolume: +e.target.value };
+                setSettings(next);
+                saveAudioSettings({ sfxVolume: next.sfxVolume, musicVolume: next.musicVolume });
+              }} />
             <span>{settings.musicVolume}%</span>
           </div>
         </section>

@@ -8,6 +8,7 @@ import { createInput } from '../game/input';
 import { CHARACTERS } from '../game/characters';
 import { buildLoadout } from '../game/weapons';
 import { getControlBindings, isActionKey } from '../game/controls';
+import { playSound, unlockAudio } from '../game/audio';
 import Tutorial from '../components/Tutorial';
 import CoinIcon from '../components/CoinIcon';
 import styles from './Game.module.css';
@@ -25,6 +26,7 @@ export default function Game() {
   const [overlay, setOverlay] = useState<'none' | 'pause' | 'win' | 'lose'>('none');
   const [stats, setStats] = useState({ kills: 0, score: 0, accuracy: 0, coins: 0 });
   const overlayRef = useRef<'none' | 'pause' | 'win' | 'lose'>('none');
+  const audioStatsRef = useRef({ ammo: -1, enemyBullets: 0, kills: 0, health: -1, pickups: 0, reloadTimer: 0 });
   const [showTutorial, setShowTutorial] = useState(() => {
     return !localStorage.getItem('bloomverse_tutorial_done');
   });
@@ -50,6 +52,9 @@ export default function Game() {
     hud.width = window.innerWidth;
     hud.height = window.innerHeight;
     canvas.style.cursor = 'none';
+    const unlock = () => unlockAudio();
+    window.addEventListener('pointerdown', unlock, { once: true });
+    window.addEventListener('keydown', unlock, { once: true });
 
     stateRef.current = createGameState(canvas.width, canvas.height, level, makeLoadout());
     inputRef.current = createInput(canvas);
@@ -92,6 +97,7 @@ export default function Game() {
       // Camera shake amplitude from engine state drives a small render offset
       sceneRef.current.update(stateRef.current, w, h, frameDt / 1000);
       sceneRef.current.render();
+      emitGameplayAudio(stateRef.current);
 
       // HUD overlay
       ctx.clearRect(0, 0, w, h);
@@ -103,6 +109,7 @@ export default function Game() {
         setStats({ kills: s.kills, score: s.score, accuracy: s.ammo > 0 ? Math.round((s.kills / Math.max(1, 30 - s.ammo + s.kills)) * 100) : 100, coins });
         overlayRef.current = 'win';
         setOverlay('win');
+        playSound('victory');
         const next = Math.max(progress.maxLevelReached, level.id + 1);
         updateProgress({ maxLevelReached: next, totalKills: progress.totalKills + s.kills });
         addCoins(coins);
@@ -114,6 +121,7 @@ export default function Game() {
         setStats({ kills: s.kills, score: s.score, accuracy: 0, coins });
         overlayRef.current = 'lose';
         setOverlay('lose');
+        playSound('defeat');
         updateProgress({ totalDeaths: progress.totalDeaths + 1, totalKills: progress.totalKills + s.kills });
         addCoins(coins);
         save();
@@ -128,6 +136,8 @@ export default function Game() {
       inputRef.current?.destroy();
       sceneRef.current?.dispose();
       window.removeEventListener('resize', onResize);
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -166,6 +176,22 @@ export default function Game() {
     localStorage.setItem('bloomverse_tutorial_done', '1');
     setShowTutorial(false);
   }, []);
+
+  const emitGameplayAudio = (s: GameState) => {
+    const prev = audioStatsRef.current;
+    if (prev.ammo < 0) {
+      audioStatsRef.current = { ammo: s.ammo, enemyBullets: s.enemyBullets.length, kills: s.kills, health: s.playerHealth, pickups: s.pickups.length, reloadTimer: s.reloadTimer };
+      return;
+    }
+    if (s.ammo < prev.ammo && s.reloadTimer <= 0) playSound('shoot');
+    if (s.enemyBullets.length > prev.enemyBullets) playSound('enemyShoot');
+    if (s.kills > prev.kills) playSound('hit');
+    if (s.playerHealth < prev.health) playSound('damage');
+    if (s.pickups.length < prev.pickups) playSound('pickup');
+    if (prev.reloadTimer <= 0 && s.reloadTimer > 0) playSound('reloadStart');
+    if (prev.reloadTimer > 0 && s.reloadTimer <= 0) playSound('reloadDone');
+    audioStatsRef.current = { ammo: s.ammo, enemyBullets: s.enemyBullets.length, kills: s.kills, health: s.playerHealth, pickups: s.pickups.length, reloadTimer: s.reloadTimer };
+  };
 
   return (
     <div className={styles.container}>
