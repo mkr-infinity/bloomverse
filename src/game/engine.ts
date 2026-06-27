@@ -71,6 +71,8 @@ export interface GameState {
   kills: number;
   waveAnnounce: number; // frames remaining to show wave text
   lastShot: number; // frame of the last fired shot (per-shot cooldown)
+  reloadTimer: number; // frames remaining until ammo refills
+  reloadDuration: number;
   weaponDamage: number;
   fireCooldown: number;
   pellets: number;
@@ -251,13 +253,14 @@ export interface GameLoadout {
   fireCooldown: number;
   pellets: number;
   maxAmmo: number;
+  reloadDuration?: number;
   bonusHealth: number;
   bonusArmor: number;
 }
 
 export function createGameState(w: number, h: number, level: LevelDef, loadout?: GameLoadout): GameState {
   const totalEnemies = level.waves.flat().reduce((s, e) => s + e.count, 0);
-  const lo: GameLoadout = loadout || { damage: 20, fireCooldown: 8, pellets: 1, maxAmmo: 50, bonusHealth: 0, bonusArmor: 0 };
+  const lo: GameLoadout = loadout || { damage: 20, fireCooldown: 8, pellets: 1, maxAmmo: 50, reloadDuration: 70, bonusHealth: 0, bonusArmor: 0 };
   const maxHealth = 100 + lo.bonusHealth;
   const cover = getLevelCover(level, w, h);
   return {
@@ -270,6 +273,7 @@ export function createGameState(w: number, h: number, level: LevelDef, loadout?:
     spawnTimer: 60, screenShake: 0, frame: 0,
     isMoving: false, waveComplete: false, levelComplete: false,
     gameOver: false, paused: false, kills: 0, waveAnnounce: 90, lastShot: -100,
+    reloadTimer: 0, reloadDuration: lo.reloadDuration || 70,
     weaponDamage: lo.damage, fireCooldown: lo.fireCooldown, pellets: lo.pellets,
   };
 }
@@ -309,10 +313,21 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
   if (!isBlocked(s.playerX, nextPlayerY, 18, s.cover)) s.playerY = nextPlayerY;
   s.playerAngle = Math.atan2(input.mouseY - s.playerY, input.mouseX - s.playerX);
 
+  // Reload countdown. Ammo refills only when the timer completes; shooting is
+  // blocked while reloading so reload becomes a tactical combat window.
+  if (s.reloadTimer > 0) {
+    s.reloadTimer--;
+    if (s.reloadTimer <= 0) {
+      s.reloadTimer = 0;
+      s.ammo = s.maxAmmo;
+      s.particles.push({ x: s.playerX, y: s.playerY, vx: 0, vy: -1, life: 18, color: '#00d4ff', size: 3 });
+    }
+  }
+
   // Shooting — fire-rate is a per-shot cooldown (not a global frame modulo),
   // so a single quick click always fires once the cooldown has elapsed.
   // Weapon stats (damage, cooldown, pellets) come from the equipped loadout.
-  if (input.shoot && s.ammo > 0 && s.frame - s.lastShot >= s.fireCooldown) {
+  if (input.shoot && s.reloadTimer <= 0 && s.ammo > 0 && s.frame - s.lastShot >= s.fireCooldown) {
     s.lastShot = s.frame;
     const bSpeed = 11;
     const pellets = Math.max(1, s.pellets);
@@ -338,9 +353,9 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
     });
   }
 
-  // Reload (takes time)
-  if (input.reload && s.ammo < s.maxAmmo) {
-    s.ammo = s.maxAmmo;
+  // Reload (timed, not instant)
+  if ((input.reload || (input.shoot && s.ammo <= 0)) && s.reloadTimer <= 0 && s.ammo < s.maxAmmo) {
+    s.reloadTimer = s.reloadDuration;
   }
 
   // Wave spawning

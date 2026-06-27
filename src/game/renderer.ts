@@ -487,14 +487,26 @@ function drawHUD(ctx: CanvasRenderingContext2D, state: GameState, w: number, h: 
   ctx.fillStyle = '#555';
   ctx.font = '11px Orbitron, monospace';
   ctx.fillText(`/ ${state.maxAmmo}`, w - 18, h - 26);
-  // Reload hint flashes when empty
-  if (state.ammo === 0) {
-    ctx.fillStyle = `rgba(255, 68, 0, ${0.5 + Math.sin(state.frame * 0.15) * 0.5})`;
+  // Timed reload indicator
+  if (state.reloadTimer > 0) {
+    const pct = 1 - state.reloadTimer / state.reloadDuration;
+    ctx.fillStyle = '#222';
+    ctx.fillRect(w - 118, h - 16, 92, 5);
+    ctx.fillStyle = '#00d4ff';
+    ctx.fillRect(w - 118, h - 16, 92 * pct, 5);
+    ctx.fillStyle = '#00d4ff';
+    ctx.font = '9px Orbitron, monospace';
+    ctx.fillText('RELOADING', w - 18, h - 20);
   } else {
-    ctx.fillStyle = '#555';
+    // Reload hint flashes when empty
+    if (state.ammo === 0) {
+      ctx.fillStyle = `rgba(255, 68, 0, ${0.5 + Math.sin(state.frame * 0.15) * 0.5})`;
+    } else {
+      ctx.fillStyle = '#555';
+    }
+    ctx.font = '9px Orbitron, monospace';
+    ctx.fillText('[R] RELOAD', w - 18, h - 14);
   }
-  ctx.font = '9px Orbitron, monospace';
-  ctx.fillText('[R] RELOAD', w - 18, h - 14);
 
   // Wave info - top center
   ctx.textAlign = 'center';

@@ -8,6 +8,7 @@ export interface WeaponDef {
   damage: number;       // per bullet
   fireCooldown: number; // frames between shots (lower = faster)
   ammo: number;         // magazine / reserve size
+  reloadFrames: number; // timed reload duration at 60fps
   pellets: number;      // bullets per shot (shotgun > 1)
   price: number;        // 0 = free starter
   rarity: 'COMMON' | 'RARE' | 'EPIC' | 'LEGEND' | 'MYTHIC';
@@ -16,19 +17,19 @@ export interface WeaponDef {
 }
 
 export const WEAPONS: WeaponDef[] = [
-  { id: 'pistol', name: 'Void Pistol', type: 'pistol', damage: 18, fireCooldown: 10, ammo: 40, pellets: 1, price: 0,
+  { id: 'pistol', name: 'Void Pistol', type: 'pistol', damage: 18, fireCooldown: 10, ammo: 40, reloadFrames: 55, pellets: 1, price: 0,
     rarity: 'COMMON', accent: '#9aa7b5', desc: 'Reliable sidearm. Never jams, never quits.' },
-  { id: 'smg', name: 'Rift SMG', type: 'smg', damage: 13, fireCooldown: 4, ammo: 80, pellets: 1, price: 400,
+  { id: 'smg', name: 'Rift SMG', type: 'smg', damage: 13, fireCooldown: 4, ammo: 80, reloadFrames: 70, pellets: 1, price: 400,
     rarity: 'RARE', accent: '#00ff88', desc: 'Spits lead. Shreds fast, light hitters at close range.' },
-  { id: 'rifle', name: 'Pulse Rifle', type: 'rifle', damage: 28, fireCooldown: 8, ammo: 60, pellets: 1, price: 750,
+  { id: 'rifle', name: 'Pulse Rifle', type: 'rifle', damage: 28, fireCooldown: 8, ammo: 60, reloadFrames: 78, pellets: 1, price: 750,
     rarity: 'RARE', accent: '#00d4ff', desc: 'Balanced all-rounder. The soldier’s choice.' },
-  { id: 'shotgun', name: 'Breach Shotgun', type: 'shotgun', damage: 20, fireCooldown: 20, ammo: 28, pellets: 5, price: 1200,
+  { id: 'shotgun', name: 'Breach Shotgun', type: 'shotgun', damage: 20, fireCooldown: 20, ammo: 28, reloadFrames: 95, pellets: 5, price: 1200,
     rarity: 'EPIC', accent: '#ff6b2d', desc: 'Five-pellet spread. Devastating up close.' },
-  { id: 'sniper', name: 'Specter Sniper', type: 'sniper', damage: 110, fireCooldown: 28, ammo: 20, pellets: 1, price: 1800,
+  { id: 'sniper', name: 'Specter Sniper', type: 'sniper', damage: 110, fireCooldown: 28, ammo: 20, reloadFrames: 110, pellets: 1, price: 1800,
     rarity: 'EPIC', accent: '#b14aff', desc: 'One shot, one kill. Punches through tanks.' },
-  { id: 'lmg', name: 'Havoc LMG', type: 'lmg', damage: 22, fireCooldown: 5, ammo: 140, pellets: 1, price: 2600,
+  { id: 'lmg', name: 'Havoc LMG', type: 'lmg', damage: 22, fireCooldown: 5, ammo: 140, reloadFrames: 130, pellets: 1, price: 2600,
     rarity: 'LEGEND', accent: '#ffcc00', desc: 'Belt-fed suppression. Hold the trigger, hold the line.' },
-  { id: 'plasma', name: 'Nova Cannon', type: 'plasma', damage: 80, fireCooldown: 11, ammo: 50, pellets: 1, price: 4200,
+  { id: 'plasma', name: 'Nova Cannon', type: 'plasma', damage: 80, fireCooldown: 11, ammo: 50, reloadFrames: 85, pellets: 1, price: 4200,
     rarity: 'MYTHIC', accent: '#ff2d55', desc: 'Superheated plasma bolts that melt everything.' },
 ];
 
@@ -65,6 +66,7 @@ export interface Loadout {
   fireCooldown: number;
   pellets: number;
   maxAmmo: number;
+  reloadDuration: number;
   bonusHealth: number;
   bonusArmor: number;
 }
@@ -83,5 +85,5 @@ export function buildLoadout(weaponId: string, ownedGear: string[]): Loadout {
     if (g.ammoMult) maxAmmo = Math.round(maxAmmo * g.ammoMult);
     if (g.damageMult) damage = Math.round(damage * g.damageMult);
   }
-  return { damage, fireCooldown: w.fireCooldown, pellets: w.pellets, maxAmmo, bonusHealth, bonusArmor };
+  return { damage, fireCooldown: w.fireCooldown, pellets: w.pellets, maxAmmo, reloadDuration: w.reloadFrames, bonusHealth, bonusArmor };
 }
