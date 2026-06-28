@@ -22,7 +22,7 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
       - uses: actions/setup-node@v4
         with:
@@ -32,6 +32,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm build
+
+      # SPA fallback: GitHub Pages serves 404.html for unknown paths,
+      # which lets React Router handle all client-side routes.
+      - run: cp dist/index.html dist/404.html
+
+      # Prevent Jekyll processing so Vite assets are served as-is.
+      - run: touch dist/.nojekyll
 
       - uses: actions/upload-pages-artifact@v3
         with:
