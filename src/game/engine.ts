@@ -101,30 +101,36 @@ export interface LevelDef {
 }
 
 export const LEVELS: LevelDef[] = [
+  // ── CITY: walkers only ──────────────────────────────────────────────────────
   { id: 1, name: 'City Outskirts', world: 'city', bg: '#0d1117', grid: '#1a2332',
-    waves: [[{type:'walker',count:4}],[{type:'walker',count:5},{type:'runner',count:2}],[{type:'walker',count:6},{type:'runner',count:3}]] },
+    waves: [[{type:'walker',count:3}],[{type:'walker',count:5}]] },
   { id: 2, name: 'Market District', world: 'city', bg: '#0f1520', grid: '#1c2535',
-    waves: [[{type:'walker',count:6},{type:'runner',count:2}],[{type:'runner',count:5},{type:'tank',count:1}],[{type:'walker',count:4},{type:'runner',count:4},{type:'tank',count:1}]] },
+    waves: [[{type:'walker',count:4}],[{type:'walker',count:5},{type:'runner',count:1}],[{type:'walker',count:4},{type:'runner',count:2}]] },
+  // ── DESERT: runners introduced ─────────────────────────────────────────────
   { id: 3, name: 'Highway Ruins', world: 'desert', bg: '#1a1408', grid: '#2d2210',
-    waves: [[{type:'runner',count:6},{type:'tank',count:1}],[{type:'walker',count:5},{type:'explosive',count:2}],[{type:'runner',count:6},{type:'tank',count:2},{type:'explosive',count:1}]] },
+    waves: [[{type:'walker',count:4},{type:'runner',count:2}],[{type:'runner',count:4},{type:'walker',count:3}],[{type:'runner',count:6}]] },
   { id: 4, name: 'Desert Compound', world: 'desert', bg: '#1c1208', grid: '#2e2010',
-    waves: [[{type:'runner',count:8},{type:'explosive',count:3}],[{type:'tank',count:3},{type:'runner',count:5}],[{type:'runner',count:6},{type:'tank',count:2},{type:'explosive',count:3}]] },
+    waves: [[{type:'runner',count:5},{type:'walker',count:4}],[{type:'runner',count:7}],[{type:'runner',count:6},{type:'walker',count:4}]] },
+  // ── FROZEN: first tank ─────────────────────────────────────────────────────
   { id: 5, name: 'Frozen Bridge', world: 'frozen', bg: '#0a1420', grid: '#152535',
-    waves: [[{type:'runner',count:8},{type:'tank',count:2}],[{type:'explosive',count:4},{type:'runner',count:6}],[{type:'tank',count:3},{type:'runner',count:8},{type:'explosive',count:2}]] },
+    waves: [[{type:'runner',count:5},{type:'walker',count:4}],[{type:'runner',count:5},{type:'tank',count:1}],[{type:'runner',count:7},{type:'tank',count:1}]] },
   { id: 6, name: 'Ice Factory', world: 'frozen', bg: '#0c1625', grid: '#18283a',
-    waves: [[{type:'runner',count:10},{type:'tank',count:3}],[{type:'explosive',count:5},{type:'tank',count:3}],[{type:'runner',count:8},{type:'tank',count:4},{type:'explosive',count:3}]] },
+    waves: [[{type:'runner',count:7},{type:'walker',count:3}],[{type:'runner',count:6},{type:'tank',count:2}],[{type:'runner',count:8},{type:'tank',count:2}]] },
+  // ── BURNING: explosives introduced ────────────────────────────────────────
   { id: 7, name: 'Burning Streets', world: 'burning', bg: '#1a0a08', grid: '#2d1510',
-    waves: [[{type:'runner',count:10},{type:'explosive',count:4}],[{type:'tank',count:4},{type:'runner',count:8}],[{type:'boss',count:1},{type:'runner',count:5}]] },
+    waves: [[{type:'runner',count:7},{type:'tank',count:1}],[{type:'runner',count:6},{type:'explosive',count:2},{type:'tank',count:1}],[{type:'runner',count:8},{type:'explosive',count:3},{type:'tank',count:2}]] },
   { id: 8, name: 'Collapsed Tower', world: 'burning', bg: '#1c0c0a', grid: '#301812',
-    waves: [[{type:'runner',count:12},{type:'explosive',count:5}],[{type:'tank',count:5},{type:'explosive',count:4}],[{type:'boss',count:1},{type:'tank',count:2},{type:'runner',count:6}]] },
+    waves: [[{type:'runner',count:8},{type:'explosive',count:3}],[{type:'tank',count:3},{type:'runner',count:5}],[{type:'boss',count:1},{type:'runner',count:4}]] },
+  // ── SKY: boss levels ──────────────────────────────────────────────────────
   { id: 9, name: 'Sky Platform', world: 'sky', bg: '#0a0a1a', grid: '#15152d',
-    waves: [[{type:'runner',count:12},{type:'tank',count:4}],[{type:'explosive',count:6},{type:'runner',count:8}],[{type:'boss',count:1},{type:'tank',count:3},{type:'explosive',count:4}]] },
+    waves: [[{type:'runner',count:9},{type:'tank',count:2}],[{type:'explosive',count:4},{type:'runner',count:7}],[{type:'boss',count:1},{type:'runner',count:4},{type:'tank',count:1}]] },
   { id: 10, name: 'Floating Arena', world: 'sky', bg: '#0b0b1e', grid: '#161630',
-    waves: [[{type:'runner',count:15},{type:'tank',count:5}],[{type:'boss',count:1},{type:'explosive',count:5},{type:'runner',count:8}],[{type:'boss',count:2},{type:'tank',count:4},{type:'runner',count:10}]] },
+    waves: [[{type:'runner',count:10},{type:'tank',count:3}],[{type:'boss',count:1},{type:'explosive',count:3},{type:'runner',count:6}],[{type:'boss',count:2},{type:'tank',count:2},{type:'runner',count:8}]] },
+  // ── VOID: endgame ─────────────────────────────────────────────────────────
   { id: 11, name: 'Void Gate', world: 'void', bg: '#050508', grid: '#0a0a15',
-    waves: [[{type:'runner',count:15},{type:'tank',count:5},{type:'explosive',count:5}],[{type:'boss',count:1},{type:'runner',count:10},{type:'explosive',count:6}],[{type:'boss',count:2},{type:'tank',count:5},{type:'runner',count:12}]] },
+    waves: [[{type:'runner',count:10},{type:'tank',count:3},{type:'explosive',count:3}],[{type:'boss',count:1},{type:'runner',count:8},{type:'explosive',count:4}],[{type:'boss',count:2},{type:'tank',count:3},{type:'runner',count:10}]] },
   { id: 12, name: 'Final Dimension', world: 'void', bg: '#030305', grid: '#080812',
-    waves: [[{type:'runner',count:18},{type:'tank',count:6},{type:'explosive',count:6}],[{type:'boss',count:2},{type:'tank',count:5},{type:'explosive',count:8}],[{type:'boss',count:3},{type:'tank',count:6},{type:'runner',count:15}]] },
+    waves: [[{type:'runner',count:14},{type:'tank',count:4},{type:'explosive',count:4}],[{type:'boss',count:2},{type:'tank',count:3},{type:'explosive',count:6}],[{type:'boss',count:3},{type:'tank',count:4},{type:'runner',count:12}]] },
 ];
 
 // === INFINITE LEVEL SYSTEM (Subway-Surfers style endless progression) ===
@@ -153,23 +159,20 @@ function nameForLevel(id: number, world: string): string {
   return cycle > 0 ? `${base} ${['', 'II', 'III', 'IV', 'V', 'VI'][Math.min(cycle, 6)]}`.trim() : base;
 }
 
-// Generate escalating waves for any level id.
+// Generate escalating waves for any level id (beyond the 12 handcrafted ones).
 function generateWaves(id: number): { type: Enemy['type']; count: number }[][] {
-  const tier = Math.floor((id - 1) / 2); // 0,0,1,1,2,2...
-  const numWaves = Math.min(3 + Math.floor(id / 8), 6);
+  const tier = Math.floor((id - 1) / 2);
+  const numWaves = Math.min(3 + Math.floor(id / 10), 5);
   const waves: { type: Enemy['type']; count: number }[][] = [];
   for (let w = 0; w < numWaves; w++) {
-    const intensity = 1 + tier * 0.25 + w * 0.15;
+    const intensity = 1 + tier * 0.15 + w * 0.10; // gentler ramp
     const wave: { type: Enemy['type']; count: number }[] = [];
-    wave.push({ type: 'runner', count: Math.round((4 + tier) * intensity) });
-    if (id >= 2) wave.push({ type: 'walker', count: Math.round((3 + tier * 0.5) * intensity) });
-    if (id >= 4) wave.push({ type: 'tank', count: Math.max(1, Math.round((tier * 0.4) * intensity)) });
-    if (id >= 5) wave.push({ type: 'explosive', count: Math.max(1, Math.round((tier * 0.5) * intensity)) });
-    // Boss on the final wave of every 4th level (and scaling later)
-    if (w === numWaves - 1 && id >= 7 && id % 4 === 3) {
-      wave.push({ type: 'boss', count: Math.min(1 + Math.floor(tier / 6), 3) });
-    } else if (w === numWaves - 1 && id >= 10 && id % 5 === 0) {
-      wave.push({ type: 'boss', count: 1 });
+    wave.push({ type: 'runner', count: Math.round((3 + tier * 0.7) * intensity) });
+    if (id >= 2) wave.push({ type: 'walker', count: Math.round((2 + tier * 0.35) * intensity) });
+    if (id >= 5) wave.push({ type: 'tank', count: Math.max(1, Math.round(tier * 0.28 * intensity)) });
+    if (id >= 7) wave.push({ type: 'explosive', count: Math.max(1, Math.round(tier * 0.30 * intensity)) });
+    if (w === numWaves - 1 && id >= 9 && id % 4 === 0) {
+      wave.push({ type: 'boss', count: Math.min(1 + Math.floor(tier / 8), 3) });
     }
     waves.push(wave);
   }
@@ -288,11 +291,11 @@ function pickCoverPoint(e: Enemy, playerX: number, playerY: number, cover: Cover
 }
 
 const ENEMY_STATS: Record<Enemy['type'], { health: number; speed: number; damage: number }> = {
-  walker: { health: 40, speed: 0.8, damage: 8 },
-  runner: { health: 25, speed: 2.0, damage: 12 },
-  tank: { health: 150, speed: 0.5, damage: 20 },
-  explosive: { health: 20, speed: 1.5, damage: 40 },
-  boss: { health: 600, speed: 0.7, damage: 25 },
+  walker:    { health: 35,  speed: 0.75, damage: 7  },
+  runner:    { health: 22,  speed: 1.5,  damage: 10 },
+  tank:      { health: 100, speed: 0.5,  damage: 18 },
+  explosive: { health: 18,  speed: 1.3,  damage: 35 },
+  boss:      { health: 350, speed: 0.65, damage: 22 },
 };
 
 export interface GameLoadout {
@@ -320,7 +323,7 @@ export function createGameState(w: number, h: number, level: LevelDef, loadout?:
     wave: 0, totalWaves: level.waves.length,
     enemies: [], bullets: [], enemyBullets: [], pickups: [], cover, particles: [],
     enemiesSpawned: 0, enemiesInWave: totalEnemies,
-    spawnTimer: 60, screenShake: 0, frame: 0,
+    spawnTimer: 120, screenShake: 0, frame: 0, // 2-sec grace period before first spawn
     isMoving: false, waveComplete: false, levelComplete: false,
     gameOver: false, paused: false, kills: 0, waveAnnounce: 90, lastShot: -100,
     reloadTimer: 0, reloadDuration: lo.reloadDuration || 70,
@@ -333,7 +336,7 @@ export function createGameState(w: number, h: number, level: LevelDef, loadout?:
 
 export function spawnEnemy(type: Enemy['type'], w: number, h: number, levelId: number = 1): Enemy {
   const stats = ENEMY_STATS[type];
-  const hpScale = 1 + (levelId - 1) * 0.15;
+  const hpScale = 1 + (levelId - 1) * 0.07; // gentler scaling per level
   const side = Math.floor(Math.random() * 4);
   let x = 0, y = 0;
   switch (side) {

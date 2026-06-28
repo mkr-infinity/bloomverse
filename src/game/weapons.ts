@@ -17,7 +17,7 @@ export interface WeaponDef {
 }
 
 export const WEAPONS: WeaponDef[] = [
-  { id: 'pistol', name: 'Void Pistol', type: 'pistol', damage: 18, fireCooldown: 10, ammo: 40, reloadFrames: 55, pellets: 1, price: 0,
+  { id: 'pistol', name: 'Void Pistol', type: 'pistol', damage: 22, fireCooldown: 8, ammo: 45, reloadFrames: 50, pellets: 1, price: 0,
     rarity: 'COMMON', accent: '#9aa7b5', desc: 'Reliable sidearm. Never jams, never quits.' },
   { id: 'smg', name: 'Rift SMG', type: 'smg', damage: 13, fireCooldown: 4, ammo: 80, reloadFrames: 70, pellets: 1, price: 400,
     rarity: 'RARE', accent: '#00ff88', desc: 'Spits lead. Shreds fast, light hitters at close range.' },

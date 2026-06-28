@@ -669,6 +669,24 @@ export class GameScene3D {
     return sprite;
   }
 
+  // ── 3D aim projection ───────────────────────────────────────────────────────
+  // Raycast the mouse screen position through the 3D camera onto the ground
+  // plane (Y=0) and return the corresponding 2D engine coordinates. This makes
+  // mouse aiming accurate regardless of camera angle or position.
+  getAimPoint(screenX: number, screenY: number, w: number, h: number): { x: number; y: number } | null {
+    const raycaster = new THREE.Raycaster();
+    const ndc = new THREE.Vector2(
+      (screenX / w) * 2 - 1,
+      -(screenY / h) * 2 + 1,
+    );
+    raycaster.setFromCamera(ndc, this.camera);
+    const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const hit = new THREE.Vector3();
+    if (!raycaster.ray.intersectPlane(groundPlane, hit)) return null;
+    const scale = this.arenaW / w;
+    return { x: hit.x / scale + w / 2, y: hit.z / scale + h / 2 };
+  }
+
   // ── Render + lifecycle ──────────────────────────────────────────────────────
 
   render() {

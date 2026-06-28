@@ -31,9 +31,15 @@ export function createInput(canvas: HTMLCanvasElement) {
     if (isActionKey(bindings, 'shoot', e.code)) state.shoot = false;
   };
   const mouseMove = (e: MouseEvent) => { const r = canvas.getBoundingClientRect(); state.mouseX = e.clientX - r.left; state.mouseY = e.clientY - r.top; };
-  const mouseDown = (e: MouseEvent) => { if (e.button === 0) { state.shoot = true; e.preventDefault(); } };
-  const mouseUp = (e: MouseEvent) => { if (e.button === 0) state.shoot = false; };
-  const mouseLeave = () => { state.shoot = false; };
+  const mouseDown = (e: MouseEvent) => {
+    if (e.button === 0) { state.shoot = true; e.preventDefault(); }
+    if (e.button === 2) { state.reload = true; e.preventDefault(); }
+  };
+  const mouseUp = (e: MouseEvent) => {
+    if (e.button === 0) state.shoot = false;
+    if (e.button === 2) state.reload = false;
+  };
+  const mouseLeave = () => { /* don't stop shoot on leave — too punishing */ };
   const contextMenu = (e: Event) => e.preventDefault();
 
   // Touch: left half = move joystick, right half = shoot (aim at touch point)

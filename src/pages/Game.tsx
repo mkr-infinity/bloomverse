@@ -28,6 +28,7 @@ export default function Game() {
   const overlayRef = useRef<'none' | 'pause' | 'win' | 'lose'>('none');
   const [killFeed, setKillFeed] = useState<Array<{ id: number; type: string }>>([]);
   const killFeedIdRef = useRef(0);
+  const [showControlsHint, setShowControlsHint] = useState(true);
   const audioStatsRef = useRef({ ammo: -1, enemyBullets: 0, kills: 0, health: -1, pickups: 0, reloadTimer: 0 });
   const [showTutorial, setShowTutorial] = useState(() => {
     return !localStorage.getItem('bloomverse_tutorial_done');
@@ -97,8 +98,18 @@ export default function Game() {
       acc += frameDt;
       const gs = stateRef.current;
       if (!gs.paused && !gs.gameOver && !gs.levelComplete) {
+        // Project raw mouse through the 3D camera onto the ground plane so aim
+        // is accurate at any perspective angle. Falls back to raw coords in 2D mode.
+        const rawMX = inputRef.current.state.mouseX;
+        const rawMY = inputRef.current.state.mouseY;
+        let aimX = rawMX, aimY = rawMY;
+        if (scene) {
+          const pt = scene.getAimPoint(rawMX, rawMY, w, h);
+          if (pt) { aimX = pt.x; aimY = pt.y; }
+        }
+        const tickInput = { ...inputRef.current.state, mouseX: aimX, mouseY: aimY };
         while (acc >= FIXED_DT) {
-          stateRef.current = tick(stateRef.current, inputRef.current.state, w, h, level);
+          stateRef.current = tick(stateRef.current, tickInput, w, h, level);
           acc -= FIXED_DT;
         }
       } else {
@@ -135,10 +146,28 @@ export default function Game() {
       // HUD overlay (or full 2D fallback if no 3D)
       ctx.clearRect(0, 0, w, h);
       if (!has3D) {
-        // Fallback: render the full 2D game on the HUD canvas
         try { render2D(ctx, stateRef.current, w, h, level, skin); } catch { /* skip frame */ }
       } else {
         drawHUDLayer(ctx, stateRef.current, w, h);
+      }
+
+      // Mouse cursor crosshair drawn at actual screen position
+      if (inputRef.current) {
+        const mx = inputRef.current.state.mouseX;
+        const my = inputRef.current.state.mouseY;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = '#00d4ff';
+        ctx.shadowBlur = 6;
+        ctx.beginPath(); ctx.arc(mx, my, 7, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(mx - 12, my); ctx.lineTo(mx - 4, my);
+        ctx.moveTo(mx + 4, my);  ctx.lineTo(mx + 12, my);
+        ctx.moveTo(mx, my - 12); ctx.lineTo(mx, my - 4);
+        ctx.moveTo(mx, my + 4);  ctx.lineTo(mx, my + 12);
+        ctx.stroke();
+        ctx.restore();
       }
 
       if (stateRef.current.levelComplete && overlayRef.current === 'none') {
@@ -230,6 +259,12 @@ export default function Game() {
     setShowTutorial(false);
   }, []);
 
+  // Auto-dismiss controls hint after 6 seconds
+  useEffect(() => {
+    const t = setTimeout(() => setShowControlsHint(false), 6000);
+    return () => clearTimeout(t);
+  }, []);
+
   const emitGameplayAudio = (s: GameState) => {
     const prev = audioStatsRef.current;
     if (prev.ammo < 0) {
@@ -261,6 +296,17 @@ export default function Game() {
               <span className={styles.killEliminatedLabel}>ELIMINATED</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Controls hint — fades after 6s */}
+      {showControlsHint && overlay === 'none' && (
+        <div className={styles.controlsHint} onClick={() => setShowControlsHint(false)}>
+          <span><kbd>WASD</kbd> Move</span>
+          <span><kbd>Mouse</kbd> Aim</span>
+          <span><kbd>Click</kbd> Shoot</span>
+          <span><kbd>R</kbd> / <kbd>Right-click</kbd> Reload</span>
+          <span><kbd>Shift</kbd> Dash</span>
         </div>
       )}
 
