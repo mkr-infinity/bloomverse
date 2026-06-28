@@ -1,6 +1,13 @@
 import { GameState, LevelDef } from './engine';
 import { CharacterSkin, drawHumanCharacter, drawZombieHuman } from './characters';
 
+// Floating damage numbers managed across frames
+interface DmgNum { x: number; y: number; damage: number; age: number; maxAge: number; critical: boolean; }
+const _dmgNums: DmgNum[] = [];
+export function addDmgNum(x: number, y: number, damage: number, critical = false) {
+  _dmgNums.push({ x, y, damage, age: 0, maxAge: 52, critical });
+}
+
 export function render(ctx: CanvasRenderingContext2D, state: GameState, w: number, h: number, level: LevelDef, skin: CharacterSkin) {
   ctx.save();
 
@@ -562,6 +569,61 @@ function drawHUD(ctx: CanvasRenderingContext2D, state: GameState, w: number, h: 
 
   // Minimap - bottom center
   drawMinimap(ctx, state, w, h);
+
+  // Boss HP bar
+  const boss = state.enemies.find((e) => e.type === 'boss');
+  if (boss) {
+    const bw = Math.min(w * 0.55, 480);
+    const bx = w / 2 - bw / 2;
+    const by = 50;
+    ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    fillRoundRect(ctx, bx - 10, by - 10, bw + 20, 48, 6);
+    ctx.fillStyle = '#ff00ff';
+    ctx.font = 'bold 9px Orbitron, monospace';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = '#ff00ff';
+    ctx.shadowBlur = 10;
+    ctx.fillText('◆  BOSS  ◆', w / 2, by + 3);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#111';
+    ctx.fillRect(bx, by + 9, bw, 16);
+    const frac = Math.max(0, boss.health / boss.maxHealth);
+    const bGrad = ctx.createLinearGradient(bx, 0, bx + bw, 0);
+    bGrad.addColorStop(0, '#cc00ff');
+    bGrad.addColorStop(0.5, '#ff00cc');
+    bGrad.addColorStop(1, '#ff44ff');
+    ctx.fillStyle = bGrad;
+    ctx.fillRect(bx, by + 9, bw * frac, 16);
+    ctx.shadowColor = '#ff00ff';
+    ctx.shadowBlur = 14;
+    ctx.fillRect(bx, by + 9, bw * frac, 16);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = '8px Orbitron, monospace';
+    ctx.fillText(`${Math.ceil(boss.health)} / ${boss.maxHealth}`, w / 2, by + 20);
+  }
+
+  // Floating damage numbers
+  drawDmgNums(ctx);
+}
+
+function drawDmgNums(ctx: CanvasRenderingContext2D) {
+  ctx.textAlign = 'center';
+  for (let i = _dmgNums.length - 1; i >= 0; i--) {
+    const n = _dmgNums[i];
+    n.age++;
+    const alpha = Math.max(0, 1 - n.age / n.maxAge);
+    const yOff = n.age * 0.7;
+    ctx.globalAlpha = alpha;
+    ctx.shadowColor = n.critical ? '#ff6600' : '#44ff88';
+    ctx.shadowBlur = n.critical ? 12 : 6;
+    ctx.font = `bold ${n.critical ? 19 : 14}px Orbitron, monospace`;
+    ctx.fillStyle = n.critical ? '#ff9900' : '#ffffff';
+    ctx.fillText(`${n.damage}`, n.x, n.y - yOff);
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+    if (n.age >= n.maxAge) _dmgNums.splice(i, 1);
+  }
 }
 
 function drawMinimap(ctx: CanvasRenderingContext2D, state: GameState, canvasW: number, canvasH: number) {

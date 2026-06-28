@@ -45,6 +45,12 @@ export default function Armory() {
 
   useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.code === 'Escape') navigate('/'); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [navigate]);
+
   const coins = progress.coins || 0;
   const ownedWeapons = progress.unlockedWeapons || ['pistol'];
   const equipped = progress.equippedWeapon || 'pistol';

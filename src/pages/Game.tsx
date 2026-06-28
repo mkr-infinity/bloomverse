@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { getLevel, createGameState, tick, GameState } from '../game/engine';
-import { drawHUDLayer } from '../game/renderer';
+import { render as render2D, drawHUDLayer, addDmgNum } from '../game/renderer';
 import { GameScene3D } from '../game/three/scene';
 import { createInput } from '../game/input';
 import { CHARACTERS } from '../game/characters';
@@ -26,6 +26,8 @@ export default function Game() {
   const [overlay, setOverlay] = useState<'none' | 'pause' | 'win' | 'lose'>('none');
   const [stats, setStats] = useState({ kills: 0, score: 0, accuracy: 0, coins: 0 });
   const overlayRef = useRef<'none' | 'pause' | 'win' | 'lose'>('none');
+  const [killFeed, setKillFeed] = useState<Array<{ id: number; type: string }>>([]);
+  const killFeedIdRef = useRef(0);
   const audioStatsRef = useRef({ ammo: -1, enemyBullets: 0, kills: 0, health: -1, pickups: 0, reloadTimer: 0 });
   const [showTutorial, setShowTutorial] = useState(() => {
     return !localStorage.getItem('bloomverse_tutorial_done');
@@ -56,9 +58,17 @@ export default function Game() {
     window.addEventListener('pointerdown', unlock, { once: true });
     window.addEventListener('keydown', unlock, { once: true });
 
-    stateRef.current = createGameState(canvas.width, canvas.height, level, makeLoadout());
+    let scene: GameScene3D | null = null;
+    try {
+      scene = new GameScene3D(canvas, level, skin);
+    } catch (err) {
+      console.error('WebGL initialization failed, falling back to 2D:', err);
+      // If WebGL fails, the game still runs via the 2D HUD canvas below
+    }
+    sceneRef.current = scene;
+    const has3D = !!scene;
+
     inputRef.current = createInput(canvas);
-    sceneRef.current = new GameScene3D(canvas, level, skin);
 
     const onResize = () => {
       canvas.width = window.innerWidth;
@@ -76,7 +86,7 @@ export default function Game() {
     let acc = 0;
 
     const loop = (now: number) => {
-      if (!stateRef.current || !inputRef.current || !sceneRef.current) return;
+      if (!stateRef.current || !inputRef.current) return;
       const w = canvas.width, h = canvas.height;
 
       // Advance simulation in fixed steps
@@ -95,13 +105,40 @@ export default function Game() {
       }
 
       // Camera shake amplitude from engine state drives a small render offset
-      sceneRef.current.update(stateRef.current, w, h, frameDt / 1000);
-      sceneRef.current.render();
+      if (scene) {
+        try {
+          scene.update(stateRef.current, w, h, frameDt / 1000);
+          scene.render();
+        } catch {
+          // if 3D rendering fails mid-frame, continue with 2D only
+        }
+      }
+
       emitGameplayAudio(stateRef.current);
 
-      // HUD overlay
+      // Damage numbers + kill feed from hit events
+      const hitEvts = stateRef.current.hitEvents;
+      if (hitEvts.length > 0) {
+        const kills: Array<{ id: number; type: string }> = [];
+        for (const evt of hitEvts) {
+          addDmgNum(evt.x, evt.y, evt.damage, evt.damage >= 40);
+          if (evt.killed && evt.killedType) {
+            kills.push({ id: killFeedIdRef.current++, type: evt.killedType });
+          }
+        }
+        if (kills.length > 0) {
+          setKillFeed((prev) => [...kills, ...prev].slice(0, 5));
+        }
+      }
+
+      // HUD overlay (or full 2D fallback if no 3D)
       ctx.clearRect(0, 0, w, h);
-      drawHUDLayer(ctx, stateRef.current, w, h);
+      if (!has3D) {
+        // Fallback: render the full 2D game on the HUD canvas
+        try { render2D(ctx, stateRef.current, w, h, level, skin); } catch { /* skip frame */ }
+      } else {
+        drawHUDLayer(ctx, stateRef.current, w, h);
+      }
 
       if (stateRef.current.levelComplete && overlayRef.current === 'none') {
         const s = stateRef.current;
@@ -142,18 +179,6 @@ export default function Game() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const bindings = getControlBindings();
-      if (isActionKey(bindings, 'pause', e.code)) {
-        if (overlay === 'none') { setOverlay('pause'); if (stateRef.current) stateRef.current.paused = true; }
-        else if (overlay === 'pause') { setOverlay('none'); if (stateRef.current) stateRef.current.paused = false; }
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [overlay]);
-
   const resume = useCallback(() => { overlayRef.current = 'none'; setOverlay('none'); if (stateRef.current) stateRef.current.paused = false; }, []);
   const retry = useCallback(() => {
     const canvas = canvasRef.current!;
@@ -171,6 +196,33 @@ export default function Game() {
   }, [level.id, navigate]);
   const quit = useCallback(() => navigate('/levels'), [navigate]);
   const home = useCallback(() => navigate('/'), [navigate]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const bindings = getControlBindings();
+      if (isActionKey(bindings, 'pause', e.code)) {
+        if (overlay === 'none') { setOverlay('pause'); if (stateRef.current) stateRef.current.paused = true; }
+        else if (overlay === 'pause') { resume(); }
+        return;
+      }
+      if (overlay === 'pause') {
+        if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); resume(); }
+        else if (e.code === 'KeyR') retry();
+        else if (e.code === 'KeyQ') quit();
+      }
+      if (overlay === 'win') {
+        if (e.code === 'Enter' || e.code === 'KeyN') nextLevel();
+        else if (e.code === 'KeyR') retry();
+        else if (e.code === 'KeyQ') quit();
+      }
+      if (overlay === 'lose') {
+        if (e.code === 'Enter' || e.code === 'KeyR') retry();
+        else if (e.code === 'KeyQ') quit();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [overlay, resume, retry, nextLevel, quit]);
 
   const closeTutorial = useCallback(() => {
     localStorage.setItem('bloomverse_tutorial_done', '1');
@@ -198,6 +250,19 @@ export default function Game() {
       <canvas ref={canvasRef} className={styles.canvas} />
       <canvas ref={hudRef} className={styles.hud} />
 
+      {/* Kill feed — top right, below enemy count */}
+      {killFeed.length > 0 && (
+        <div className={styles.killFeed}>
+          {killFeed.map((k) => (
+            <div key={k.id} className={styles.killEntry}>
+              <span className={styles.killIcon}>✕</span>
+              <span className={styles.killType}>{k.type.toUpperCase()}</span>
+              <span className={styles.killEliminatedLabel}>ELIMINATED</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {showTutorial && <Tutorial onClose={closeTutorial} />}
 
       {/* PAUSE OVERLAY */}
@@ -214,7 +279,11 @@ export default function Game() {
               <button className={styles.btnSecondary} onClick={retry}>RESTART LEVEL</button>
               <button className={styles.btnDanger} onClick={quit}>QUIT TO MAP</button>
             </div>
-            <p className={styles.hint}>ESC to resume</p>
+            <div className={styles.keyHints}>
+              <span><kbd>ESC</kbd> Resume</span>
+              <span><kbd>R</kbd> Restart</span>
+              <span><kbd>Q</kbd> Quit</span>
+            </div>
           </div>
         </div>
       )}
@@ -270,6 +339,11 @@ export default function Game() {
                   <button className={styles.btnSmall} onClick={quit}>MAP</button>
                   <button className={styles.btnSmall} onClick={home}>HOME</button>
                 </div>
+                <div className={styles.keyHints}>
+                  <span><kbd>ENTER</kbd> Next</span>
+                  <span><kbd>R</kbd> Replay</span>
+                  <span><kbd>Q</kbd> Map</span>
+                </div>
               </div>
             </div>
           </div>
@@ -306,6 +380,10 @@ export default function Game() {
               <div className={styles.defeatSecRow}>
                 <button className={styles.btnSmall} onClick={quit}>MAP</button>
                 <button className={styles.btnSmall} onClick={home}>HOME</button>
+              </div>
+              <div className={styles.keyHints}>
+                <span><kbd>ENTER</kbd> Retry</span>
+                <span><kbd>Q</kbd> Map</span>
               </div>
             </div>
 

@@ -366,6 +366,18 @@
   text-shadow: 0 0 8px rgba(255, 45, 85, 0.8);
 }
 
+.focused {
+  outline: 2px solid rgba(0, 212, 255, 0.9);
+  outline-offset: 3px;
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.45);
+}
+
+/* Global focus visible for keyboard nav */
+:global(:focus-visible) {
+  outline: 2px solid rgba(0, 212, 255, 0.8);
+  outline-offset: 2px;
+}
+
 .endNote {
   text-align: center;
   font-size: 11px;

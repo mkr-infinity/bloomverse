@@ -123,15 +123,18 @@ export default function CharacterSelect() {
     setDrag(0);
   };
 
-  // keyboard arrows
+  // keyboard navigation
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') go(-1);
       else if (e.key === 'ArrowRight') go(1);
+      else if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); handleDeploy(); }
+      else if (e.code === 'Escape') navigate('/');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [go]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [go, navigate, selected, isOwned, coins]);
 
   const handleDeploy = () => {
     if (!isOwned) {
@@ -176,7 +179,7 @@ export default function CharacterSelect() {
 
       <div className={styles.progressTrack}>
         <span className={styles.progressLabel}>{selected + 1} / {count}</span>
-        <span className={styles.swipeHint}>&#8592; SWIPE &#8594;</span>
+        <span className={styles.swipeHint}>&#8592; ARROW KEYS / SWIPE &#8594;</span>
       </div>
 
       <div

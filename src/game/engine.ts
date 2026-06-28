@@ -87,6 +87,8 @@ export interface GameState {
   weaponDamage: number;
   fireCooldown: number;
   pellets: number;
+  hitEvents: Array<{ x: number; y: number; damage: number; killed?: boolean; killedType?: string }>;
+  dashTriggered: boolean;
 }
 
 export interface LevelDef {
@@ -325,6 +327,7 @@ export function createGameState(w: number, h: number, level: LevelDef, loadout?:
     abilityCooldown: 0, abilityCooldownMax: 180, abilityActive: 0, lastAbility: -999,
     weaponId: lo.weaponId || 'pistol', weaponType: lo.weaponType || 'pistol', weaponAccent: lo.weaponAccent || '#9aa7b5',
     weaponDamage: lo.damage, fireCooldown: lo.fireCooldown, pellets: lo.pellets,
+    hitEvents: [], dashTriggered: false,
   };
 }
 
@@ -346,6 +349,8 @@ export function spawnEnemy(type: Enemy['type'], w: number, h: number, levelId: n
 export function tick(state: GameState, input: { up: boolean; down: boolean; left: boolean; right: boolean; mouseX: number; mouseY: number; shoot: boolean; reload: boolean; ability?: boolean }, w: number, h: number, level: LevelDef): GameState {
   if (state.paused || state.gameOver || state.levelComplete) return state;
   const s = { ...state, enemies: [...state.enemies], bullets: [...state.bullets], enemyBullets: [...state.enemyBullets], pickups: [...state.pickups], cover: [...state.cover], particles: [...state.particles] };
+  s.hitEvents = [];
+  s.dashTriggered = false;
   s.frame++;
 
   // Player movement with acceleration
@@ -391,6 +396,7 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
     }
     s.abilityCooldown = s.abilityCooldownMax;
     s.lastAbility = s.frame;
+    s.dashTriggered = true;
   }
 
   // Reload countdown. Ammo refills only when the timer completes; shooting is
@@ -573,6 +579,7 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
       const hitDist = e.type === 'boss' ? 35 : e.type === 'tank' ? 25 : 18;
       if (Math.abs(b.x - e.x) < hitDist && Math.abs(b.y - e.y) < hitDist) {
         e.health -= b.damage;
+        s.hitEvents.push({ x: e.x, y: e.y - 12, damage: b.damage });
         s.bullets.splice(i, 1);
         // Hit particles
         for (let p = 0; p < 3; p++) {
@@ -591,6 +598,7 @@ export function tick(state: GameState, input: { up: boolean; down: boolean; left
               s.playerHealth -= 15;
             }
           }
+          s.hitEvents.push({ x: e.x, y: e.y - 12, damage: b.damage, killed: true, killedType: e.type });
           s.enemies.splice(j, 1);
           s.kills++;
           s.score += e.type === 'boss' ? 500 : e.type === 'tank' ? 100 : 25;

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { getLevel, getLevelInfo, BASE_LEVEL_COUNT } from '../game/engine';
 import CoinIcon from '../components/CoinIcon';
@@ -24,6 +24,8 @@ export default function LevelMap() {
   const progress = useGameStore((s) => s.progress);
   const load = useGameStore((s) => s.load);
   const maxLevel = progress.maxLevelReached;
+  const [focusedId, setFocusedId] = useState(maxLevel);
+  const nodeRefs = useRef<Record<number, HTMLButtonElement | null>>({});
 
   useEffect(() => { load(); }, [load]);
 
@@ -45,6 +47,25 @@ export default function LevelMap() {
   }, [total]);
 
   const play = (id: number) => { if (id <= maxLevel) navigate(`/game/${id}`); };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === 'Escape') { navigate('/'); return; }
+      if (e.code === 'ArrowRight' || e.code === 'ArrowDown') {
+        setFocusedId((prev) => { const next = Math.min(maxLevel, prev + 1); nodeRefs.current[next]?.focus(); return next; });
+        e.preventDefault();
+      }
+      if (e.code === 'ArrowLeft' || e.code === 'ArrowUp') {
+        setFocusedId((prev) => { const next = Math.max(1, prev - 1); nodeRefs.current[next]?.focus(); return next; });
+        e.preventDefault();
+      }
+      if (e.code === 'Enter') { play(focusedId); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusedId, maxLevel, navigate]);
 
   return (
     <div className={styles.world}>
@@ -89,9 +110,10 @@ export default function LevelMap() {
                   <div key={lvl.id} className={styles.nodeWrap}>
                     <div className={styles.connector} />
                     <button
-                      className={`${styles.node} ${done ? styles.done : ''} ${current ? styles.current : ''} ${!unlocked ? styles.locked : ''} ${info.hasBoss ? styles.boss : ''}`}
-                      onClick={() => play(lvl.id)}
+                      className={`${styles.node} ${done ? styles.done : ''} ${current ? styles.current : ''} ${!unlocked ? styles.locked : ''} ${info.hasBoss ? styles.boss : ''} ${focusedId === lvl.id ? styles.focused : ''}`}
+                      onClick={() => { setFocusedId(lvl.id); play(lvl.id); }}
                       disabled={!unlocked}
+                      ref={(el) => { nodeRefs.current[lvl.id] = el; }}
                     >
                       {done ? (
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>

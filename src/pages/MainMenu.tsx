@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { loadData } from '../utils/db';
@@ -13,6 +13,7 @@ export default function MainMenu() {
   const [introComplete, setIntroComplete] = useState(false);
   const load = useGameStore((s) => s.load);
   const reset = useGameStore((s) => s.reset);
+  const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     loadData('gameState', 'progress').then((data) => setHasSave(!!data));
@@ -35,6 +36,44 @@ export default function MainMenu() {
     navigate('/character');
   }, [reset, navigate]);
 
+  // Keyboard navigation
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!showMenu) {
+        // Splash screen — any key starts the menu
+        if (e.code === 'Enter' || e.code === 'Space' || e.code === 'KeyW' || e.code === 'ArrowUp') {
+          e.preventDefault();
+          handleStart();
+        }
+        return;
+      }
+      // Menu is open: move focus with arrows
+      if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+        e.preventDefault();
+        const buttons = Array.from(navRef.current?.querySelectorAll<HTMLButtonElement>('button') ?? []);
+        const idx = buttons.indexOf(document.activeElement as HTMLButtonElement);
+        buttons[(idx + 1) % buttons.length]?.focus();
+      }
+      if (e.code === 'ArrowUp' || e.code === 'KeyW') {
+        e.preventDefault();
+        const buttons = Array.from(navRef.current?.querySelectorAll<HTMLButtonElement>('button') ?? []);
+        const idx = buttons.indexOf(document.activeElement as HTMLButtonElement);
+        buttons[(idx - 1 + buttons.length) % buttons.length]?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showMenu, handleStart]);
+
+  // Auto-focus first menu button when menu opens
+  useEffect(() => {
+    if (showMenu) {
+      setTimeout(() => {
+        navRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+      }, 100);
+    }
+  }, [showMenu]);
+
   return (
     <div className={styles.container} onClick={!showMenu ? handleStart : undefined}>
       <ActionBackground />
@@ -54,12 +93,6 @@ export default function MainMenu() {
             ))}
           </h1>
           <p className={styles.tagline}>SURVIVE &middot; FIGHT &middot; ESCAPE</p>
-          <div className={styles.bootMeta}>
-            <span>3D BROWSER BUILD</span>
-            <span>LOCAL SAVE</span>
-            <span>OFFLINE READY</span>
-          </div>
-
           <div className={styles.pressStart}>
             <div className={styles.tapBtn}>
               <span className={styles.tapPulse} />
@@ -74,15 +107,10 @@ export default function MainMenu() {
             <img src={logoSvg} alt="Bloomverse" className={styles.menuLogo} />
             <div>
               <h1 className={styles.menuTitle}>BLOOMVERSE</h1>
-              <p className={styles.menuSub}>3D BROWSER SURVIVAL &middot; SAVES LOCALLY</p>
+              <p className={styles.menuSub}>SURVIVE &middot; FIGHT &middot; ESCAPE</p>
             </div>
           </div>
-          <div className={styles.statusStrip}>
-            <span>READY TO DEPLOY</span>
-            <span>NO LOGIN</span>
-            <span>INDEXEDDB SAVE</span>
-          </div>
-          <nav className={styles.nav}>
+          <nav className={styles.nav} ref={navRef}>
             {hasSave && (
               <button className={`${styles.menuBtn} ${styles.continueBtn}`} onClick={handleContinue}>
                 <div className={styles.btnLeft}>

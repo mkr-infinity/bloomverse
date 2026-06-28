@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { exportAllData, importAllData, resetAllData } from '../utils/db';
 import { CONTROL_ACTIONS, ControlAction, formatBinding, formatKey, getControlBindings, resetControlBindings, saveControlBindings, setPrimaryBinding } from '../game/controls';
@@ -68,6 +68,14 @@ export default function Settings() {
     setMsg('Controls reset to default.');
   };
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === 'Escape' && !listeningFor) navigate('/');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [navigate, listeningFor]);
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -79,9 +87,8 @@ export default function Settings() {
 
       <div className={styles.content}>
         <div className={styles.heroCard}>
-          <span className={styles.heroKicker}>BROWSER READY</span>
           <h2>SET UP YOUR RUN</h2>
-          <p>Adjust audio, controls and save data. Everything is stored locally in this browser.</p>
+          <p>Adjust audio, controls and save data.</p>
         </div>
 
         <section className={styles.section}>

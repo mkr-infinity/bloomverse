@@ -409,6 +409,89 @@
 
 .arrow { font-size: 16px; }
 
+/* Keyboard shortcut hints in overlays */
+.keyHints {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+  justify-content: center;
+}
+
+.keyHints span {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.keyHints kbd {
+  font-family: var(--font-display);
+  font-size: 8px;
+  padding: 2px 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.5px;
+}
+
+/* KILL FEED */
+.killFeed {
+  position: absolute;
+  top: 56px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.killEntry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: rgba(0, 0, 0, 0.6);
+  border-right: 2px solid rgba(255, 45, 85, 0.8);
+  backdrop-filter: blur(4px);
+  animation: killSlideIn 0.25s ease both, killFadeOut 0.4s ease 2.8s both;
+}
+
+.killIcon {
+  font-size: 10px;
+  color: #ff2d55;
+  font-weight: 900;
+}
+
+.killType {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #fff;
+}
+
+.killEliminatedLabel {
+  font-family: var(--font-display);
+  font-size: 7px;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+@keyframes killSlideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes killFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
 /* ANIMATIONS */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
