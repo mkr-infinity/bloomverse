@@ -69,6 +69,7 @@ export default function Game() {
     const has3D = !!scene;
 
     inputRef.current = createInput(canvas);
+    stateRef.current = createGameState(canvas.width, canvas.height, level, makeLoadout());
 
     const onResize = () => {
       canvas.width = window.innerWidth;
